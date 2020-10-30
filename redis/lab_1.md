@@ -52,7 +52,7 @@ https://andreyex.ru/informaciya/zapusk-redis-v-windows-10
  Встановлюємо пакет і запускаємо як окремий додаток, знайшовши його в панелі пошуку.
 
 
- ![search img](img/lab1/search-img.png?raw=false "Title")
+ ![search img](/img/lab1/search-img.png?raw=false "Title")
 
 
  Для перевірки роботи WSL, запускаємо дистрибутив. Якщо при установці не виникло ніяких проблем, то після задання імені користувача та його паролю, система готова до використання !
