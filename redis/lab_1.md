@@ -15,11 +15,100 @@ https://uk.wikipedia.org/wiki/Redis
 #### 1. Встановллення
 Для користувачів Windows 10 необхідно активувати WSL(Windows Subsystem for Linux - рівень сумісності, що дозволяє нативно запускати бінарні файли Linux). По данному посиланню є інформація по встановлення, яка буде корисною для користувачів обох ОС. 
 https://andreyex.ru/informaciya/zapusk-redis-v-windows-10
-TODO 1: 
+
+##### 1.1 Налаштування WSL 
+Відкрийте PowerShell від імені адміністратора  і запустіть наступну команду, аби можна було користуватись WSL  
+
+
+```Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux```
+
+##### 1.2 Апаратна віртуалізація
+Можливо, що віртуалізація у вас вимкнена на рівні BIOS. Аби це вирішити, зайдіть в налаштування BIOS, а саме - CPU Configuration.
+
+
+Знайдіть наступну опцію
+
+###### Для процесорів Intel
+
+``` Intel Virtualization Technology ```
+
+###### Для процесорів AMD
+
+
+```SVM Mode ```
+
+
+Після виконання команди перезавантажте комп'ютер. Далі, слід перевірити чи ввімкнута функція віртуалізації у вашій системі.
+Для цього необхідно зайти в диспетчер задач перейти по вкладці продуктивність(производительность - рус.)
+В нижній частині вікна, ви маєте побачити наступний надпис
+
+
+```Виртуализация: включено```
+
+
+#### 1.3 Установка Linux-дистрибутива 
+
+ Для встановлення дистрибутива скористуємось Microsoft Store.  В панелі пошуку вибираємо потрібний(для прикладу - Ubuntu 20.04 LTS).
+ Встановлюємо пакет і запускаємо як окремий додаток, знайшовши його в панелі пошуку.
+
+
+ ![search img](img/lab1/search-img.png?raw=false "Title")
+
+
+ Для перевірки роботи WSL, запускаємо дистрибутив. Якщо при установці не виникло ніяких проблем, то після задання імені користувача та його паролю, система готова до використання !
+
+
+
+TODO 1:     
 це посилання потрібно переенести в цю лабораторні і перевести*. 
 Альтернативою може бути встановлення віртуальної машини Linux або використання Docker for Windows.
+
+
+
+
+
 https://www.instructables.com/id/How-to-install-Linux-on-your-Windows/
+
+### Встановлення Linux на VM(virtual machine)
+
+Переклад статті https://www.instructables.com/How-to-install-Linux-on-your-Windows/
+
+Для установки вам необхідні дві речі:
+
+- VirtualBox
+Програму можна запускати як на Windows, так і на  Linux & Mac.  
+
+Ви її можете завантажити по [посиланню](https://www.virtualbox.org/wiki/Downloads)
+
+
+### Крок 1 Виберіть тип системи 
+
+ ![virtual box](https://cdn.instructables.com/ORIG/FM6/J57Z/HLJV1WNK/FM6J57ZHLJV1WNK.png?auto=webp&frame=1&fit=bounds&md=219b622b5eaafe931cf6097957e174ed
+"Title")
+
+-Після установки Virtual Box, натисніть New
+-Напишіть назву вашої системи, наприклад Linux Mint 15
+-Виберіть тип: Linux
+-Виберіть версію: Ubuntu
+
+### Крок 2 Виберіть кількість оперативної пам'яті для використання
+
+
+
+ ![virtual box](https://cdn.instructables.com/ORIG/FX1/NW30/HLJV1WOP/FX1NW30HLJV1WOP.png?auto=webp&frame=1&fit=bounds&md=01789b9bd61617546f67a533c8b32015
+"Title")
+
+Наприклад:
+
+```1024 MB = 1GB```
+
+
+### Установка Docker
+
 https://docs.docker.com/docker-for-windows/install/
+
+
+
 
 #### 2.  Перевірити роботу redis з з допомого redis-cli та команди ping:
 
