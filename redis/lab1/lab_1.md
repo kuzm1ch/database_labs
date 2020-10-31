@@ -52,63 +52,43 @@ https://andreyex.ru/informaciya/zapusk-redis-v-windows-10
  Встановлюємо пакет і запускаємо як окремий додаток, знайшовши його в панелі пошуку.
 
 
- ![search-img](https://github.com/rexvel/database_labs/blob/romanenko_illia/redis/img/lab1/img-search.png "Title")
+![search-img](img/img-search.png)
+
 
 
  Для перевірки роботи WSL, запускаємо дистрибутив. Якщо при установці не виникло ніяких проблем, то після задання імені користувача та його паролю, система готова до використання !
 
 
 
-TODO 1:     
+<!-- TODO 1:     
 це посилання потрібно переенести в цю лабораторні і перевести*. 
+
+https://www.instructables.com/id/How-to-install-Linux-on-your-Windows/ -->
+
+
+
+### Альтернативи 
+
+
 Альтернативою може бути встановлення віртуальної машини Linux або використання Docker for Windows.
 
 
+[Установка docker на Windows (англ)](https://docs.docker.com/docker-for-windows/install/)
+
+[Установка Linux на Virtual Box](alternatives.md)
 
 
+#### 1.4 Установка redis
 
-https://www.instructables.com/id/How-to-install-Linux-on-your-Windows/
+Запустіть linux-дистрибутив та встановіть redis, .
+Приклад команд працює з Ubuntu, ввівши наступне: 
 
-### Встановлення Linux на VM(virtual machine)
-
-Переклад статті https://www.instructables.com/How-to-install-Linux-on-your-Windows/
-
-Для установки вам необхідні дві речі:
-
-- VirtualBox
-Програму можна запускати як на Windows, так і на  Linux & Mac.  
-
-Ви її можете завантажити по [посиланню](https://www.virtualbox.org/wiki/Downloads)
-
-
-### Крок 1 Виберіть тип системи 
-
- ![virtual box](https://cdn.instructables.com/ORIG/FM6/J57Z/HLJV1WNK/FM6J57ZHLJV1WNK.png?auto=webp&frame=1&fit=bounds&md=219b622b5eaafe931cf6097957e174ed
-"Title")
-
--Після установки Virtual Box, натисніть New
--Напишіть назву вашої системи, наприклад Linux Mint 15
--Виберіть тип: Linux
--Виберіть версію: Ubuntu
-
-### Крок 2 Виберіть кількість оперативної пам'яті для використання
-
-
-
- ![virtual box](https://cdn.instructables.com/ORIG/FX1/NW30/HLJV1WOP/FX1NW30HLJV1WOP.png?auto=webp&frame=1&fit=bounds&md=01789b9bd61617546f67a533c8b32015
-"Title")
-
-Наприклад:
-
-```1024 MB = 1GB```
-
-
-### Установка Docker
-
-https://docs.docker.com/docker-for-windows/install/
-
-
-
+```console 
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install redis-server
+redis-cli -v
+```
 
 #### 2.  Перевірити роботу redis з з допомого redis-cli та команди ping:
 
