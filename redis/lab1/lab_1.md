@@ -54,9 +54,6 @@ https://andreyex.ru/informaciya/zapusk-redis-v-windows-10
 
 ![search-img](img/img-search.png)
 
-<!-- ![search-img](https://github.com/rexvel/database_labs/blob/romanenko_illia/redis/img/lab1/img-search.png ) -->
-
-
 
 
  Для перевірки роботи WSL, запускаємо дистрибутив. Якщо при установці не виникло ніяких проблем, то після задання імені користувача та його паролю, система готова до використання !
@@ -81,7 +78,17 @@ https://www.instructables.com/id/How-to-install-Linux-on-your-Windows/ -->
 [Установка Linux на Virtual Box](alternatives.md)
 
 
+#### 1.4 Установка redis
 
+Запустіть linux-дистрибутив та встановіть redis, .
+Приклад команд працює з Ubuntu, ввівши наступне: 
+
+```console 
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install redis-server
+redis-cli -v
+```
 
 #### 2.  Перевірити роботу redis з з допомого redis-cli та команди ping:
 
