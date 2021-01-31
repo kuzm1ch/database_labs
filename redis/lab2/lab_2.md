@@ -21,18 +21,18 @@ lpush user:123 open:page1 open:page2 order:ticket order:ticket2 buy:all
 #### 1.2 Множини(Sets)
 
 Множини використовуються для зберігання унікальних значень і представляють набір операцій - таких, як об’єднання. Множини не впорядковані, але представляють ефективні операції із значеннями. Список друзів являється класичним прикладом множин:
-````console
+```console
 sadd friends:leto ghanima paul chani jessica
 sadd friends:duncan paul jessica alia
 ```
 Незалежно від того, скільки друзів має користувач, ми можемо ефективно (O(1)) визначити, чи є користувач userX і userY друзями чи ні.
-````console
+```console
 sismember friends:leto jessica
 sismember friends:leto vladimir
 ```
 ##### Завдання:
 1. Створити множину предметів першого і друго семестру(від 5).
-````console
+```console
 sadd subject:1 subjectX ...
 sadd subject:2 subjectY ...
 ```
@@ -42,7 +42,7 @@ sadd subject:2 subjectY ...
 
 Впорядковані множини (Sorted Sets)
 Останній і самий потужний тип являються впорядковані множини. Хеши схожі на строки, але мають поля, а впорядковані множини схожі на множини, але мають лічильники. Лічильники надають можливість впорядковувати і ранжирувати. Якщо ми хочемо отримати список друзів, ми можемо зробити наступне:
-````console
+```console
 zadd friends:leto 100 ghanima 95 paul 95 chani 75 jessica 1 vladimir
 ```
 Створити впорядкований список предметів за перший семестр з їх оцінками(від 5 елементів).
@@ -54,7 +54,7 @@ zadd friends:leto 100 ghanima 95 paul 95 chani 75 jessica 1 vladimir
 #### 2.1 TTL
 
 Redis дозволяє назначати ключам час існування(TTL). Ви можете використовувати абсолютні значення в часі в форматі Unix(Unix timestamp https://www.unixtimestamp.com/ ), або час, який залишився ключу існувати.
-````console
+```console
 expire pages:about 30
 expireat pages:about 1600473600
 ```
