@@ -32,7 +32,7 @@ https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/ (офіці
 * Використовуючи пакетний менеджер вашої системи:
 https://docs.mongodb.com/manual/administration/install-on-linux/  (офіційна документація)
 
-* Або використовуючи docker:  
+##### Docker(незалежно від OS):
 docker run -p 27017:27107  mongo:latest ( запустити mongoDB server)  
 doker exec -it <container_name/container_id> mongo (підключитись до MongoDB серверу з допомогою cli mongo)
 
