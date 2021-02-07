@@ -29,7 +29,7 @@ https://metanit.com/nosql/mongodb/1.2.php  (простий мануал)
 https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/ (офіційна документація)
 
 ##### Linux:
-* Використовуючи пакетний менеджер вашої системи:
+Використовуючи пакетний менеджер вашої системи:
 https://docs.mongodb.com/manual/administration/install-on-linux/  (офіційна документація)
 
 ##### Docker(незалежно від OS):
