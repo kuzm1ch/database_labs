@@ -17,9 +17,9 @@
 
 
 #### psycopg адаптер
-* В даній роботі з'єднання буде встановлено із використанням psycopg python адаптеру. Psycopg is the most popular PostgreSQL database adapter for the Python programming language. Its main features are the complete implementation of the Python DB API 2.0 specification and the thread safety (several threads can share the same connection). It was designed for heavily multi-threaded applications that create and destroy lots of cursors and make a large number of concurrent “INSERT”s or “UPDATE”s. 
+* В даній роботі з'єднання буде встановлено із використанням psycopg python адаптеру. Psycopg найбільш популярний адаптер для PostgreSQL для бази даних для мови програмування Python. Його основні особливості — це повна реалізація специфікації Python DB API 2.0 і безпека потоків (кілька потоків можуть використовувати одне з'єднання). Він був розроблений для багатопоточних програм, які створюють і знищують велику кількість курсорів і створюють велику кількість одночасних «INSERT» або «UPDATE». 
 
-* Psycopg 2 is mostly implemented in C as a libpq wrapper, resulting in being both efficient and secure. It features client-side and server-side cursors, asynchronous communication and notifications, “COPY TO/COPY FROM” support. Many Python types are supported out-of-the-box and adapted to matching PostgreSQL data types; adaptation can be extended and customized thanks to a flexible objects adaptation system. Psycopg 2 is both Unicode and Python 3 friendly.
+* Psycopg 2 здебільшого реалізовано на мові програмування C на основі libpq, що робить її більш ефективною та безпечнішою. Також, він має курсори на стороні клієнта і на стороні сервера, асинхронність в сповіщенні та комунікації, підтримку «COPY TO/COPY FROM»(«КОПІЮВАТИ В/КОПІЮВАТИ З»). Багато типів Python підтримуються зразу і адаптуються до типів даних PostgreSQL; адаптація можить бути розширена і налаштована завдяки гибкій системі адаптації об'єктів. Psycopg 2 може взаємодіяти з Unicode і Python 3.
 
 * Встановлення psycopg слід виконати із допомогою пакетного менеджера мови Python - pip, який буде автоматично встановлений, якщо Python був завантажений із python.org . В протилежному випадку можна скористатись [документацією](https://pip.pypa.io/en/stable/installation/).
 
