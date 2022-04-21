@@ -180,7 +180,7 @@ hdel users:goku age
 ##### Завдання №4:
 
 - Створити хеш таблицю students:hash_yourname з полями name: your_name, university: sut, group: PD-32, id: number_in_group
-- Добавити полt age з відповідним значенням
+- Добавити поле age з відповідним значенням
 - Вивести всі значення
 - Вивести значення поля id
 - Видалити поле university
