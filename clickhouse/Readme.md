@@ -53,7 +53,7 @@ password: admin
 
 ```
 microk8s kubectl get pods -A # для того аби отримати список всіх подів, що запущені в кластері
-microk8s kubectl exec -it <grafana-назва поду> -n observability -- /bin/bash
+microk8s kubectl exec -it <grafana-назва поду> -n observability  -c grafana -- /bin/bash
 grafana-cli plugins install grafana-clickhouse-datasource
 ```
 Після запуску команди наявність плагіну слід перевірити в UI http://localhost:3000/ . 
