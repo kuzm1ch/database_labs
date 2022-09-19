@@ -82,7 +82,7 @@ Default Password: clickhouse_operator_password
 https://clickhouse.com/docs/en/getting-started/example-datasets/opensky
 
 ```
-kubectl -n test exec -it chi-demo-01-demo-01-0-0-0 -- /bin/bash
+microk8s kubectl -n test exec -it chi-demo-01-demo-01-0-0-0 -- /bin/bash
 ```
 
 https://docs.altinity.com/integrations/clickhouse-and-grafana/grafana-create-charts/ - те чого треба досягти, а саме візалізувати дані для потреб моніторингу(у випадку, якщо б дані в БД поступали постійно) та аналітики
