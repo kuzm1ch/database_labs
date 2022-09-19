@@ -34,7 +34,7 @@ Cтатус  "Running" означає, що компонент готовий.
 ### Налаштування grafana-и
 Прокинути сервіс графани на локальну машину:
 ```
-microk8s kubectl port-forward svc/grafana 3000 -n monitoring
+microk8s kubectl port-forward svc/kube-prom-stack-grafana 3000 -n observing
 ```
 
 Grafana буде доступна за посиланням http://localhost:3000/ . 
