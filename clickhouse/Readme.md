@@ -34,7 +34,7 @@ Cтатус  "Running" означає, що компонент готовий.
 ### Налаштування grafana-и
 Прокинути сервіс графани на локальну машину:
 ```
-microk8s kubectl port-forward svc/kube-prom-stack-grafana 3000 -n observing
+microk8s kubectl port-forward svc/kube-prom-stack-grafana 3000 -n observability
 ```
 
 Grafana буде доступна за посиланням http://localhost:3000/ . 
@@ -53,7 +53,7 @@ password: admin
 
 ```
 microk8s kubectl get pods -A # для того аби отримати список всіх подів, що запущені в кластері
-microk8s kubectl exec -it <grafana-назва поду> -n monitoring -- /bin/bash
+microk8s kubectl exec -it <grafana-назва поду> -n observability -- /bin/bash
 grafana-cli plugins install grafana-clickhouse-datasource
 ```
 Після запуску команди наявність плагіну слід перевірити в UI http://localhost:3000/ . 
