@@ -68,11 +68,7 @@ https://docs.altinity.com/clickhouseonkubernetes/kubernetesquickstartguide/quick
 microk8s kubectl apply -f https://github.com/Altinity/clickhouse-operator/raw/0.18.3/deploy/operator/clickhouse-operator-install-bundle.yaml
 microk8s kubectl create namespace test
 
-git clone git@github.com:kuzm1ch/database_labs.git # завантажити проект
-cd database_labs # перейти в папку проекту
-git checkout <current-branch> # перейти на потрібну гілку
-
-microk8s kubectl apply -f clickhouse/clickhouse.yaml # інсталяція сlickhose бази
+microk8s kubectl apply -f https://raw.githubusercontent.com/kuzm1ch/database_labs/feat/clickhouse/clickhouse/clickhouse.yaml
 microk8s kubectl get all -n test # перевірка
 ```
 Дефолтний логін та пароль
