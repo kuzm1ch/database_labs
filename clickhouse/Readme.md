@@ -87,7 +87,7 @@ Default Username: clickhouse_operator
 Default Password: clickhouse_operator_password
 ```
 
-### Завантаення даних (dataset)
+### Завантажння даних (dataset)
 
 https://clickhouse.com/docs/en/getting-started/example-datasets/opensky
 
@@ -101,3 +101,7 @@ https://docs.altinity.com/integrations/clickhouse-and-grafana/grafana-create-cha
 kubectl -n test exec -it chi-demo-01-demo-01-0-0-0 -- clickhouse-client
 SELECT formatReadableSize(total_bytes) FROM system.tables WHERE name = 'opensky';
 ```
+
+### Підключення grafana
+<img src='./datasource.png' width=200/>
+<img src='./worldmap.jpg' width=400/>
