@@ -24,16 +24,16 @@ microk8s enable  metrics-server dns storage prometheus
 Через 5 хв перевірити їх готовність:
 ```
 ✗ microk8s kubectl get pods -A
-NAMESPACE     NAME                                         READY   STATUS    RESTARTS         AGE
-kube-system   kubernetes-dashboard-869949b85-7vjgd         1/1     Running   6 (6m22s ago)    2d2h
-monitoring    prometheus-operator-7775c66ccf-nbj59         2/2     Running   12 (6m22s ago)   7d3h
-monitoring    node-exporter-dnjct                          2/2     Running   12 (6m22s ago)   7d3h
-monitoring    prometheus-adapter-59df95d9f5-52chj          1/1     Running   6 (6m22s ago)    7d3h
-monitoring    kube-state-metrics-76f6cb7996-qd4xg          3/3     Running   18 (6m22s ago)   7d3h
-monitoring    blackbox-exporter-55c457d5fb-xkjxz           3/3     Running   18 (6m22s ago)   7d3h
-kube-system   dashboard-metrics-scraper-58d4977855-4p9qz   1/1     Running   6 (6m22s ago)    2d2h
-monitoring    prometheus-adapter-59df95d9f5-xzk5g          1/1     Running   6 (6m22s ago)    7d3h
-kube-system   metrics-server-85df567dd8-q5lbc              1/1     Running   6 (6m22s ago)    2d2h
+NAMESPACE        NAME                                         READY   STATUS    RESTARTS         AGE
+kube-system      kubernetes-dashboard-869949b85-7vjgd         1/1     Running   6 (6m22s ago)    2d2h
+observability    prometheus-operator-7775c66ccf-nbj59         2/2     Running   12 (6m22s ago)   7d3h
+observability    node-exporter-dnjct                          2/2     Running   12 (6m22s ago)   7d3h
+observability    prometheus-adapter-59df95d9f5-52chj          1/1     Running   6 (6m22s ago)    7d3h
+observability    kube-state-metrics-76f6cb7996-qd4xg          3/3     Running   18 (6m22s ago)   7d3h
+observability    blackbox-exporter-55c457d5fb-xkjxz           3/3     Running   18 (6m22s ago)   7d3h
+kube-system      dashboard-metrics-scraper-58d4977855-4p9qz   1/1     Running   6 (6m22s ago)    2d2h
+observability    prometheus-adapter-59df95d9f5-xzk5g          1/1     Running   6 (6m22s ago)    7d3h
+kube-system      metrics-server-85df567dd8-q5lbc              1/1     Running   6 (6m22s ago)    2d2h
 ******
 ```
 Cтатус  "Running" означає, що компонент готовий.
@@ -48,7 +48,7 @@ Grafana буде доступна за посиланням http://localhost:300
 Дефолтний пароль:
 ```
 login: admin
-password: admin
+password: prom-operator
 ```
 Ознайомитись із UI.  
 Завдання:
