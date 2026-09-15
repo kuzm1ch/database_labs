@@ -1,15 +1,18 @@
 ## Набір лабораторних робіт по Redis
+
 Дані лабораторні роботи написанні на основі [The Little Redis Book](https://github.com/karlseguin/the-little-redis-book). Розраховона для студентів навчальних закладів України.  
 Допомога у вигляді pull request або issue вітається.  
+
+
+
 ### 1 Лабораторна
-https://docs.google.com/document/d/19fZ01svlQgH2Eq7IhMx5t8qaCFh-uvBQuMIV_Seam8Y/edit?usp=sharing
-#### ~~TODO~~
-* ~~перенести весь контент із гугл доку в гіт~~
-* ~~розширити лабораторну картинками та скрінами(тобто по можливості зробити її більш живою) - optional~~
-* ~~перенести необхідну інформацію із [The Little Redis Book](https://github.com/karlseguin/the-little-redis-book), переклавши її українською~~
+
+[Знайомство з Redis](lab1/lab_1.md) — встановлення Redis (WSL/Linux), redis-cli, рядки та хеші.
 
 ### 2 Лабораторна
-https://docs.google.com/document/d/19iWQrd3ZkGha9bx_7oX4VdZAQPAYl4QrwdJPUQ5J-_s/edit?usp=sharing
-#### TODO
-* ~~перенести весь контент із гугл доку в гіт~~
-* перенести необхідну інформацію із [The Little Redis Book](https://github.com/karlseguin/the-little-redis-book), переклавши її українською, щоб вся необхідна інформація по роботі була в одному місці
+
+[Типи даних і адміністрування](lab2/lab_2.md) — списки, множини, впорядковані множини, TTL, налаштування паролю.
+
+### 3 Лабораторна
+
+[RedisInsight, часові ряди та аналіз даних](lab3/lab_3.md) — Redis Stack (RedisTimeSeries), Streams, Python (redis-py), візуалізація в RedisInsight Workbench.
