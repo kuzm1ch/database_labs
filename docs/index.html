@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Комплексний VibeCode проєкт — Database Labs</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#1e1e1e',
+                            card: '#252526',
+                            border: '#3c3c3c',
+                            textMuted: '#aaaaaa',
+                            accent: '#007acc'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: #e1e1e1;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        pre {
+            background-color: #1a1a1a;
+            border: 1px solid #2d2d2d;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 max-w-6xl mx-auto">
+
+    <!-- Header -->
+    <header class="mb-8 border-b border-brand-border pb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <span class="text-xs font-semibold tracking-wider text-blue-400 uppercase">Database Labs</span>
+            <h1 class="text-3xl font-bold mt-1 text-white">Комплексний VibeCode проєкт</h1>
+            <p class="text-brand-textMuted mt-2 text-sm max-w-2xl">
+                Трирівнева локальна архітектура баз даних (MongoDB + Redis + ScyllaDB): керування реєстром сенсорів, живі стани, агрегаційні дашборди та кешування.
+            </p>
+        </div>
+        <div class="flex items-center gap-2 self-start md:self-center bg-brand-card px-3 py-1.5 rounded border border-brand-border text-xs text-brand-textMuted">
+            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+            Формат: Локальний запуск (100% Offline)
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="flex flex-wrap gap-2 border-b border-brand-border pb-3 mb-6">
+        <button onclick="switchTab('concept')" id="btn-concept" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-accent text-white">
+            💡 Архітектура та Ролі БД
+        </button>
+        <button onclick="switchTab('variants')" id="btn-variants" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-card text-brand-textMuted hover:bg-zinc-800 hover:text-white">
+            📋 Варіанти завдань (25)
+        </button>
+        <button onclick="switchTab('telemetry')" id="btn-telemetry" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-card text-brand-textMuted hover:bg-zinc-800 hover:text-white">
+            📡 Реальна телеметрія (Зразки)
+        </button>
+        <button onclick="switchTab('compose')" id="btn-compose" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-card text-brand-textMuted hover:bg-zinc-800 hover:text-white">
+            📦 Docker Compose
+        </button>
+        <button onclick="switchTab('tasks')" id="btn-tasks" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-card text-brand-textMuted hover:bg-zinc-800 hover:text-white">
+            🛠️ Технічні вимоги (По кроках)
+        </button>
+        <button onclick="switchTab('ai-prompts')" id="btn-ai-prompts" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-card text-brand-textMuted hover:bg-zinc-800 hover:text-white">
+            🤖 Промпти для AI
+        </button>
+        <button onclick="switchTab('free-ai')" id="btn-free-ai" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-card text-brand-textMuted hover:bg-zinc-800 hover:text-white">
+            🧰 Безкоштовні AI-інструменти
+        </button>
+        <button onclick="switchTab('grading')" id="btn-grading" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-card text-brand-textMuted hover:bg-zinc-800 hover:text-white">
+            📊 Шкала оцінювання
+        </button>
+    </nav>
+
+    <!-- TAB 1: CONCEPT -->
+    <div id="tab-concept" class="tab-content active space-y-6">
+        <div class="border-l-2 border-blue-500/60 pl-4">
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-blue-400 mb-1">Мета</h2>
+            <p class="text-sm leading-relaxed text-zinc-300">
+                Навчитися обирати базу даних під задачу і побудувати локальний веб-додаток, у якому <strong>MongoDB</strong> зберігає реєстр сенсорів і правила, <strong>Redis</strong> тримає поточний стан і кеш, а <strong>ScyllaDB</strong> накопичує історію вимірів для графіків. Друга частина мети: пройти цей шлях з безкоштовними AI-інструментами, порівняти кілька з них і вміти пояснити, який код вони згенерували і чому він працює саме так.
+            </p>
+        </div>
+        <div class="bg-brand-card border border-brand-border rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-white mb-3">Головна ідея: Чому в одній системі використовуються 3 різні бази даних?</h2>
+            <p class="text-sm leading-relaxed text-zinc-300">
+                У сучасних IoT та високонавантажених системах одна база даних не може однаково добре вирішувати всі задачі. У цьому проєкті ви будуєте локальний веб-додаток розумного моніторингу, де <strong>MongoDB</strong> відповідає за гнучкий реєстр обладнання та правил, що редагуються прямо з фронтенду, <strong>Redis</strong> миттєво віддає поточний стан і кешує важкі розрахунки, а <strong>ScyllaDB</strong> зберігає тисячі історичних вимірів для побудови агрегаційних графіків.
+            </p>
+        </div>
+
+        <h3 class="text-lg font-semibold text-white mt-6 mb-3">Чіткий розподіл ролей кожної бази даних</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- MongoDB Card -->
+            <div class="bg-brand-card border border-brand-border rounded-lg p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-green-400 uppercase tracking-wider">1. Реєстр сенсорів і правил</span>
+                        <span class="bg-green-500/10 text-green-400 text-[10px] px-2 py-0.5 rounded border border-green-500/20">MongoDB</span>
+                    </div>
+                    <p class="text-sm text-zinc-300 mb-2">
+                        Працює напряму з формами на фронтенді. Зберігає колекцію <code class="text-xs text-green-300 bg-black/40 px-1 py-0.5 rounded">sensors</code> та правила автоматизації:
+                    </p>
+                    <ul class="list-disc pl-4 space-y-1 text-xs text-zinc-400">
+                        <li><strong>Гнучка схема (Schema-less):</strong> кожен датчик має власні вкладені метадані (<code class="text-zinc-200">specs</code>: точність, зона, батарея, калібрування).</li>
+                        <li><strong>Живий CRUD з UI:</strong> додавання нового сенсора та зміна порогу тривоги (<code class="text-zinc-200">threshold</code>) прямо з браузера без перезапуску коду.</li>
+                    </ul>
+                </div>
+                <div class="border-t border-brand-border mt-4 pt-3 text-xs text-brand-textMuted">
+                    <strong>Операції:</strong> find(), insert_one(), update_one({$set}), delete_one().
+                </div>
+            </div>
+
+            <!-- Redis Card -->
+            <div class="bg-brand-card border border-brand-border rounded-lg p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-red-400 uppercase tracking-wider">2. Швидкі стани та Кеш</span>
+                        <span class="bg-red-500/10 text-red-400 text-[10px] px-2 py-0.5 rounded border border-red-500/20">Redis</span>
+                    </div>
+                    <p class="text-sm text-zinc-300 mb-2">
+                        Працює в оперативній пам'яті (In-Memory) для миттєвої відповіді (&lt;1 мс):
+                    </p>
+                    <ul class="list-disc pl-4 space-y-1 text-xs text-zinc-400">
+                        <li><strong>Live State (Hash):</strong> поточні показники датчиків та прапорець стану реле автоматизації (<code class="text-zinc-200">actuator_status</code>).</li>
+                        <li><strong>Query Cache (String + TTL):</strong> кешування готових точок агрегаційних графіків зі ScyllaDB на 60 секунд.</li>
+                    </ul>
+                </div>
+                <div class="border-t border-brand-border mt-4 pt-3 text-xs text-brand-textMuted">
+                    <strong>Операції:</strong> HSET/HGETALL та SETEX/GET/TTL/DEL (Cache-Aside).
+                </div>
+            </div>
+
+            <!-- ScyllaDB Card -->
+            <div class="bg-brand-card border border-brand-border rounded-lg p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-blue-400 uppercase tracking-wider">3. Часові ряди та Аналітика</span>
+                        <span class="bg-blue-500/10 text-blue-400 text-[10px] px-2 py-0.5 rounded border border-blue-500/20">ScyllaDB</span>
+                    </div>
+                    <p class="text-sm text-zinc-300 mb-2">
+                        Зберігає <strong>тисячі сирих історичних записів</strong> (Time-Series) кожної хвилини у широких таблицях (Wide-Column):
+                    </p>
+                    <ul class="list-disc pl-4 space-y-1 text-xs text-zinc-400">
+                        <li>Швидка вибірка історії об'єкта за рахунок <strong>Partition Key</strong> (<code class="text-zinc-200">object_id</code>) та <strong>Clustering Key</strong> (<code class="text-zinc-200">ts DESC</code>).</li>
+                        <li>Джерело сирих даних для розрахунку агрегаційних дашбордів.</li>
+                    </ul>
+                </div>
+                <div class="border-t border-brand-border mt-4 pt-3 text-xs text-brand-textMuted">
+                    <strong>Операції:</strong> Масовий INSERT та вибірка CQL за діапазоном часу.
+                </div>
+            </div>
+        </div>
+
+        <h3 class="text-lg font-semibold text-white mt-8 mb-3">Як ці 3 бази взаємодіють між собою на фронтенді?</h3>
+        <div class="bg-brand-card border border-brand-border rounded-lg p-5 space-y-3 text-xs text-zinc-300">
+            <p><strong>Сценарій 1 (MongoDB &rarr; Фронтенд &rarr; Redis):</strong> Користувач відкриває сайт і бачить список зареєстрованих датчиків із колекції <code class="text-green-400">sensors</code> у MongoDB. Через форму на сайті студент додає новий датчик (наприклад, резервний термометр зі специфічним JSON-полем <code class="text-green-400">{"location": "Стеля", "accuracy": "0.1C"}</code>) або змінює поріг спрацювання тривоги (<code class="text-green-400">threshold</code>) прямо в інтерфейсі. Зміни миттєво записуються в MongoDB, відображаються на сторінці, а бекенд одразу перевіряє новий поріг і перемикає статус реле в <strong>Redis Hash</strong>!</p>
+            <p><strong>Сценарій 2 (ScyllaDB &rarr; Агрегація &rarr; Кеш у Redis):</strong> Фронтенд запитує дані для двох аналітичних графіків за останні 12 годин: <strong>(1) Коридор значень Min / Avg / Max по годинах</strong> та <strong>(2) Гістограма кількості спрацювань тривоги по годинах</strong>. При першому запиті бекенд читає 720 сирих записів зі <strong>ScyllaDB</strong>, агрегує їх по годинах і кладе готовий JSON у <strong>Redis</strong> на 60 секунд (<code class="text-yellow-400">SETEX</code>). Усі наступні оновлення сторінки віддають графіки з Redis за 1 мс.</p>
+        </div>
+    </div>
+
+    <!-- TAB 2: VARIANTS -->
+    <div id="tab-variants" class="tab-content space-y-6">
+        <div class="bg-brand-card border border-brand-border rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-white mb-2">Таблиця індивідуальних варіантів (25 студентів)</h2>
+            <p class="text-sm text-brand-textMuted mb-4">
+                Кожен студент виконує роботу відповідно до свого номера в списку групи. Три базові сенсори варіанта мають бути зареєстровані як документи в колекції <code class="text-green-400">sensors</code> у MongoDB (плюс можливість додати 4-й кастомний сенсор через UI). Перший сенсор агрегується на Графіку №1 (Min/Avg/Max), а порушення порогу тригера (який теж зберігається і редагується в MongoDB) рахується на Графіку №2.
+            </p>
+            
+            <div class="overflow-x-auto border border-brand-border rounded-lg">
+                <table class="w-full text-left text-xs text-zinc-300 divide-y divide-zinc-800">
+                    <thead class="bg-zinc-800/50 uppercase tracking-wider text-white">
+                        <tr>
+                            <th class="p-3">№</th>
+                            <th class="p-3">Об'єкт моніторингу</th>
+                            <th class="p-3">Базові сенсори в MongoDB (Метрики)</th>
+                            <th class="p-3">Правило автоматизації (Поріг редагується в MongoDB)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-800/60">
+                        <tr>
+                            <td class="p-3 font-semibold text-white">1</td>
+                            <td class="p-3 font-semibold text-blue-400">Розумна квартира</td>
+                            <td class="p-3">temp (°C), humidity (%), lux (Lux)</td>
+                            <td class="p-3">Якщо temp &gt; 26, встановити кондиціонер в Redis на "COOLING", записати тривогу у Scylla.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">2</td>
+                            <td class="p-3 font-semibold text-blue-400">Еко-Котедж</td>
+                            <td class="p-3">temp (°C), co2 (ppm), solar_gen (kW)</td>
+                            <td class="p-3">Якщо co2 &gt; 1000, встановити вентиляцію в Redis на "ON", записати тривогу у Scylla.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">3</td>
+                            <td class="p-3 font-semibold text-blue-400">Промислова теплиця</td>
+                            <td class="p-3">temp (°C), humidity (%), soil_moisture (%)</td>
+                            <td class="p-3">Якщо soil_moisture &lt; 30, встановити полив в Redis на "AUTO_ON", записати тривогу у Scylla.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">4</td>
+                            <td class="p-3 font-semibold text-blue-400">Дата-центр</td>
+                            <td class="p-3">temp (°C), rack_power (kW), smoke_detector (0/1)</td>
+                            <td class="p-3">Якщо temp &gt; 24 або smoke == 1, встановити сирену на "CRITICAL", записати тривогу у Scylla.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">5</td>
+                            <td class="p-3 font-semibold text-blue-400">Розумний офіс</td>
+                            <td class="p-3">co2 (ppm), light_level (Lux), occupancy (0/1)</td>
+                            <td class="p-3">Якщо co2 &gt; 900, встановити клімат-контроль в Redis на "BOOST", записати тривогу у Scylla.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">6</td>
+                            <td class="p-3 font-semibold text-blue-400">Винний погріб</td>
+                            <td class="p-3">temp (°C), humidity (%), vibration (g)</td>
+                            <td class="p-3">Якщо vibration &gt; 2, встановити тривогу на "WINE_ALERT", записати в Scylla.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">7</td>
+                            <td class="p-3 font-semibold text-blue-400">Гідропонна ферма</td>
+                            <td class="p-3">water_ph (pH), water_ec (EC), water_temp (°C)</td>
+                            <td class="p-3">Якщо water_ph &lt; 5.5, встановити дозатор лугу на "DOSING" в Redis.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">8</td>
+                            <td class="p-3 font-semibold text-blue-400">Розумний гараж</td>
+                            <td class="p-3">co_gas (ppm), door_status (0/1), motion (0/1)</td>
+                            <td class="p-3">Якщо co_gas &gt; 50, встановити витяжку на "MAX_SPEED", записати аварійний лог.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">9</td>
+                            <td class="p-3 font-semibold text-blue-400">Крипто-ферма</td>
+                            <td class="p-3">gpu_temp (°C), fan_speed (RPM), power_usage (kW)</td>
+                            <td class="p-3">Якщо gpu_temp &gt; 80, змінити статус живлення на "EMERGENCY_SHUTDOWN" в Redis.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">10</td>
+                            <td class="p-3 font-semibold text-blue-400">Серверна кімната</td>
+                            <td class="p-3">temp (°C), humidity (%), water_leak (0/1)</td>
+                            <td class="p-3">Якщо temp &gt; 25 або water_leak == 1, змінити клапан на "CLOSED" та записати аварію у Scylla.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">11</td>
+                            <td class="p-3 font-semibold text-blue-400">Розумний готель</td>
+                            <td class="p-3">temp (°C), power_sockets (W), card_inserted (0/1)</td>
+                            <td class="p-3">Якщо power_sockets &gt; 3500, вимкнути розетки в Redis (встановити "OVERLOAD_OFF").</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">12</td>
+                            <td class="p-3 font-semibold text-blue-400">Аквапонічний басейн</td>
+                            <td class="p-3">dissolved_oxygen (mg/L), water_temp (°C), turbidity (NTU)</td>
+                            <td class="p-3">Якщо dissolved_oxygen &lt; 5, увімкнути додатковий аератор на "ON" в Redis.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">13</td>
+                            <td class="p-3 font-semibold text-blue-400">Розумний склад</td>
+                            <td class="p-3">temp (°C), humidity (%), door_open (0/1)</td>
+                            <td class="p-3">Якщо humidity &gt; 65, встановити осушувач повітря на "RUNNING", записати в Scylla.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">14</td>
+                            <td class="p-3 font-semibold text-blue-400">Система поливу саду</td>
+                            <td class="p-3">soil_moist (%), air_temp (°C), tank_level (%)</td>
+                            <td class="p-3">Якщо soil_moist &lt; 30, відкрити клапан поливу на "ACTIVE".</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">15</td>
+                            <td class="p-3 font-semibold text-blue-400">Зарядна EV Станція</td>
+                            <td class="p-3">connector_temp (°C), current_amp (A), charging_active (0/1)</td>
+                            <td class="p-3">Якщо connector_temp &gt; 60, змінити струм на обмеження "HALF_POWER" в Redis.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">16</td>
+                            <td class="p-3 font-semibold text-blue-400">Захищений архів</td>
+                            <td class="p-3">humidity (%), light_lux (Lux), uv_index (uW/cm2)</td>
+                            <td class="p-3">Якщо uv_index &gt; 50, встановити статус жалюзі на "CLOSED", логувати в Scylla.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">17</td>
+                            <td class="p-3 font-semibold text-blue-400">Рефрижератор</td>
+                            <td class="p-3">cargo_temp (°C), g_force (g), doors_locked (0/1)</td>
+                            <td class="p-3">Якщо cargo_temp &gt; -15, встановити рефрижератор на "MAX_FREEZING", логувати в Scylla.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">18</td>
+                            <td class="p-3 font-semibold text-blue-400">Розумна пральня</td>
+                            <td class="p-3">drum_vibration (g), water_usage (L), power_usage (W)</td>
+                            <td class="p-3">Якщо drum_vibration &gt; 5, встановити режим захисту "DRUM_HALT" в Redis.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">19</td>
+                            <td class="p-3 font-semibold text-blue-400">Біо-інкубатор</td>
+                            <td class="p-3">temp (°C), co2_level (ppm), o2_percent (%)</td>
+                            <td class="p-3">Якщо o2_percent &lt; 19, встановити подачу O2 на "HIGH" в Redis та логувати в Scylla.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">20</td>
+                            <td class="p-3 font-semibold text-blue-400">Киснева станція</td>
+                            <td class="p-3">pressure (bar), o2_purity (%), pump_temp (°C)</td>
+                            <td class="p-3">Якщо pressure &gt; 10, встановити аварійний клапан в Redis на "OPEN" для скиду тиску.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">21</td>
+                            <td class="p-3 font-semibold text-blue-400">Система танення снігу</td>
+                            <td class="p-3">surface_temp (°C), heating_power (kW), moisture_detected (0/1)</td>
+                            <td class="p-3">Якщо surface_temp &lt; 2, увімкнути обігрів "ACTIVE_HEATING".</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">22</td>
+                            <td class="p-3 font-semibold text-blue-400">Розумна котельня</td>
+                            <td class="p-3">boiler_temp (°C), water_pressure (bar), gas_leak (ppm)</td>
+                            <td class="p-3">Якщо gas_leak &gt; 100, перекрити подачу газу (встановити "EMERGENCY_SHUTOFF" в Redis).</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">23</td>
+                            <td class="p-3 font-semibold text-blue-400">Погодна метеовежа</td>
+                            <td class="p-3">wind_speed (m/s), air_temp (°C), wind_direction (deg)</td>
+                            <td class="p-3">Якщо wind_speed &gt; 25, увімкнути захист анемометра "BRAKE_ON" та записати в Scylla.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">24</td>
+                            <td class="p-3 font-semibold text-blue-400">SPA Басейн</td>
+                            <td class="p-3">water_temp (°C), chlorine_level (ppm), water_ph (pH)</td>
+                            <td class="p-3">Якщо water_ph &gt; 7.8, встановити дозування pH- на "ACTIVE" в Redis з TTL 5 хв.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold text-white">25</td>
+                            <td class="p-3 font-semibold text-blue-400">Розумний пташник</td>
+                            <td class="p-3">air_temp (°C), co2_level (ppm), illuminance (Lux)</td>
+                            <td class="p-3">Якщо air_temp &lt; 18, встановити обігрів "HEATER_ON" та записати лог у Scylla.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: REAL TELEMETRY & DATASETS -->
+    <div id="tab-telemetry" class="tab-content space-y-6">
+        <div class="bg-brand-card border border-brand-border rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-white mb-2">Як виглядають реальні дані з IoT-датчиків у промисловості та Smart Home</h2>
+            <p class="text-sm text-zinc-300 leading-relaxed">
+                У реальних проектах датчики ніколи не відправляють просто число <code class="text-yellow-400">24.5</code>. Вони спілкуються за протоколом <strong>MQTT</strong> або <strong>HTTP</strong> і формують структуровані JSON-пакети, які містять апаратну адресу пристрою (<code class="text-blue-300">ieee_address</code> або <code class="text-blue-300">MAC</code>), діагностику радіоканалу (<code class="text-blue-300">linkquality</code> / <code class="text-blue-300">RSSI</code>), напругу живлення (<code class="text-blue-300">voltage_mv</code> / <code class="text-blue-300">battery</code>) та паспорт можливостей сенсора (<code class="text-green-400">exposes</code>). Нижче наведені три головні світові стандарти та відкриті датасети, на які слід орієнтуватися при генерації даних у вашому проєкті.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Standard 1: Zigbee2MQTT -->
+            <div class="bg-brand-card border border-brand-border rounded-lg p-5 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-bold text-green-400">1. Стандарт Zigbee2MQTT (Xiaomi Aqara / Sonoff / Tuya)</h3>
+                    <span class="text-[10px] bg-green-500/10 text-green-300 px-2 py-0.5 rounded border border-green-500/20">MongoDB + Redis</span>
+                </div>
+                <p class="text-xs text-zinc-300 leading-relaxed">
+                    Найпопулярніший відкритий стандарт для бездротових Zigbee-датчиків. Кожен пристрій публікує два типи JSON: <strong>паспорт пристрою (Exposes)</strong> — ідеально лягає в колекцію <code class="text-green-400">sensors</code> у <strong>MongoDB</strong>, та <strong>пакет телеметрії стану</strong> — ідеально лягає в <strong>Redis Hash</strong> та <strong>ScyllaDB</strong>.
+                </p>
+                <div class="text-xs space-y-1">
+                    <div>🔗 <a href="https://www.zigbee2mqtt.io/guide/usage/mqtt_topics_and_messages.html" target="_blank" class="text-blue-400 hover:underline">Документація Zigbee2MQTT: Приклади JSON-повідомлень</a></div>
+                    <div>🔗 <a href="https://www.zigbee2mqtt.io/guide/usage/exposes.html" target="_blank" class="text-blue-400 hover:underline">Специфікація Exposes (Як описуються характеристики датчиків)</a></div>
+                    <div>🔗 <a href="https://www.zigbee2mqtt.io/supported-devices/" target="_blank" class="text-blue-400 hover:underline">Каталог 5800+ реальних датчиків із фото та їхніми JSON-полями</a></div>
+                </div>
+                <pre class="p-3 rounded text-[11px] font-mono text-zinc-300 overflow-x-auto">// 1. Паспорт пристрою (Зберігаємо в MongoDB db.sensors):
+{
+  "ieee_address": "0x00158d00045b2c91",
+  "friendly_name": "sensor_temp_livingroom",
+  "vendor": "Aqara",
+  "model": "WSDCGQ11LM",
+  "exposes": {
+    "metric": "temp",
+    "unit": "°C",
+    "value_min": -20,
+    "value_max": 60,
+    "accuracy": 0.3
+  }
+}
+
+// 2. Реальний MQTT пакет телеметрії (Пишемо в Redis Hash та ScyllaDB):
+{
+  "temperature": 27.34,
+  "humidity": 44.72,
+  "pressure": 1009.4,
+  "battery": 91,
+  "voltage": 2985,
+  "linkquality": 147
+}</pre>
+            </div>
+
+            <!-- Standard 2: Tasmota ESP32/ESP8266 -->
+            <div class="bg-brand-card border border-brand-border rounded-lg p-5 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-bold text-amber-400">2. Стандарт Tasmota (ESP32 / Промислові контролери та реле)</h3>
+                    <span class="text-[10px] bg-amber-500/10 text-amber-300 px-2 py-0.5 rounded border border-amber-500/20">Вкладений JSON</span>
+                </div>
+                <p class="text-xs text-zinc-300 leading-relaxed">
+                    Прошивка <strong>Tasmota</strong> працює на мільйонах мікроконтролерів ESP8266/ESP32 та розумних розетках. Вона групує показання за назвою фізичного чіпа сенсора (<code class="text-amber-300">DS18B20</code>, <code class="text-amber-300">BME280</code>, <code class="text-amber-300">ENERGY</code>) у пакеті <code class="text-amber-300">StatusSNS</code>.
+                </p>
+                <div class="text-xs space-y-1">
+                    <div>🔗 <a href="https://tasmota.github.io/docs/JSON-Status-Responses/" target="_blank" class="text-blue-400 hover:underline">Офіційний довідник Tasmota: JSON Status Responses (StatusSNS)</a></div>
+                    <div>🔗 <a href="https://blog.mylocalbytes.com/kb/2022-01-10/lb-pm-power-monitoring" target="_blank" class="text-blue-400 hover:underline">Розбір пакету ENERGY (Потужність, Напруга, Струм, Коефіцієнт)</a></div>
+                </div>
+                <pre class="p-3 rounded text-[11px] font-mono text-zinc-300 overflow-x-auto">// Пакет tele/node_01/SENSOR від промислового вузла ESP32:
+{
+  "Time": "2026-11-06T21:57:38",
+  "DS18B20": {
+    "Id": "011938475A2B",
+    "Temperature": 24.6
+  },
+  "ENERGY": {
+    "TotalStartTime": "2026-01-01T00:00:00",
+    "Total": 143.705,
+    "Power": 1420,
+    "Voltage": 231,
+    "Current": 6.14,
+    "Factor": 0.99
+  },
+  "Wifi": {
+    "SSId": "Industrial_IoT_VLAN",
+    "RSSI": -62
+  }
+}</pre>
+            </div>
+        </div>
+
+        <!-- Real Datasets on Kaggle -->
+        <div class="bg-brand-card border border-brand-border rounded-lg p-6 space-y-4">
+            <h3 class="text-base font-bold text-blue-400">3. Реальні відкриті датасети на Kaggle (Зразки таблиць для ScyllaDB)</h3>
+            <p class="text-xs text-zinc-300 leading-relaxed">
+                Ви можете подивитися реальні CSV/JSON записи з фізичних Raspberry Pi та промислових будівель або навіть завантажити частину CSV у свою ScyllaDB:
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div class="bg-black/30 border border-zinc-800 rounded p-4 space-y-2">
+                    <div class="font-bold text-white">Environmental Sensor Telemetry (405k рядків)</div>
+                    <p class="text-zinc-400">Зібрано з 3-х фізичних Raspberry Pi по MQTT. Поля: <code>ts</code> (Unix epoch), <code>device_id</code> (MAC-адреса <code>1c:bf:ce:15:ec:4d</code>), <code>temp</code>, <code>humidity</code>, <code>co</code>, <code>lpg</code>, <code>smoke</code>, <code>light</code>, <code>motion</code>.</p>
+                    <a href="https://www.kaggle.com/datasets/garystafford/environmental-sensor-data-132k" target="_blank" class="inline-block text-blue-400 hover:underline font-medium">Відкрити на Kaggle &rarr;</a>
+                </div>
+                <div class="bg-black/30 border border-zinc-800 rounded p-4 space-y-2">
+                    <div class="font-bold text-white">Smart Building Environmental IoT Dataset</div>
+                    <p class="text-zinc-400">Реальна телеметрія офісної будівлі по зонах. Поля: <code>Temperature</code>, <code>Humidity</code>, <code>CO2 (ppm)</code>, <code>PM2.5</code>, <code>Illuminance (Lux)</code>, <code>Sound_dB</code> та індекс комфорту.</p>
+                    <a href="https://www.kaggle.com/datasets/ziya07/environmental-design-iotml-dataset" target="_blank" class="inline-block text-blue-400 hover:underline font-medium">Відкрити на Kaggle &rarr;</a>
+                </div>
+                <div class="bg-black/30 border border-zinc-800 rounded p-4 space-y-2">
+                    <div class="font-bold text-white">IoT Indoor Air Quality (IAQ Telemetry)</div>
+                    <p class="text-zinc-400">Багатосенсорний датасет якості повітря в приміщеннях: <code>PM2.5</code>, <code>PM10</code>, <code>CO2</code>, <code>TVOC</code>, <code>CO</code>, <code>Temperature</code>, <code>Humidity</code>, <code>Light</code>.</p>
+                    <a href="https://www.kaggle.com/datasets/khajaahmed1/iot-indoor-air-quality" target="_blank" class="inline-block text-blue-400 hover:underline font-medium">Відкрити на Kaggle &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: DOCKER COMPOSE -->
+    <div id="tab-compose" class="tab-content space-y-6">
+        <div class="bg-brand-card border border-brand-border rounded-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-white">Оптимізований docker-compose.yml</h2>
+                <button onclick="copyCode()" class="bg-brand-accent hover:bg-blue-600 text-white text-xs px-3 py-1.5 rounded transition">
+                    Копіювати конфіг
+                </button>
+            </div>
+            <p class="text-xs text-brand-textMuted mb-4">
+                Увага: Конфігурація ScyllaDB спеціально обмежена за допомогою <code class="text-zinc-200">--developer-mode 1</code>, лімітом оперативної пам'яті (1 ГБ) та CPU (1 ядро). Це гарантує безперебійний запуск на звичайних студентських ноутбуках та Windows WSL без повного зависання системи.
+            </p>
+            <pre class="p-4 rounded-md overflow-x-auto text-xs text-zinc-300 font-mono" id="compose-code">services:
+  # 1. MongoDB - Реєстр сенсорів (гнучка схема) та правил автоматизації
+  mongodb:
+    image: mongo:9.0
+    container_name: database_lab_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: app_db
+    restart: always
+
+  # 2. Redis - Рівень миттєвих станів (Hash) та кешування дашбордів (SETEX)
+  redis:
+    image: redis:8.10-alpine
+    container_name: database_lab_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --loglevel warning
+    volumes:
+      - redis_data:/data
+    restart: always
+
+  # 3. ScyllaDB - Сирі часові ряди (Time-Series) для агрегацій
+  scylla:
+    image: scylladb/scylla:2026.3
+    container_name: database_lab_scylla
+    ports:
+      - "9042:9042"
+    # Налаштування для економії ресурсів ноутбуків!
+    command: --developer-mode 1 --overprovisioned 1 --smp 1 --memory 1G
+    volumes:
+      - scylla_data:/var/lib/scylla
+    deploy:
+      resources:
+        limits:
+          memory: 1500M
+    restart: always
+
+volumes:
+  mongo_data:
+  redis_data:
+  scylla_data:</pre>
+        </div>
+    </div>
+
+    <!-- TAB 4: TASKS -->
+    <div id="tab-tasks" class="tab-content space-y-6">
+        <h2 class="text-xl font-semibold text-white">Чіткі технічні вимоги до кожної бази даних</h2>
+
+        <div class="space-y-5">
+            <!-- MongoDB Requirements -->
+            <div class="bg-brand-card border-l-4 border-l-green-500 border border-brand-border rounded-lg p-5">
+                <h3 class="text-base font-bold text-green-400 mb-2">Вимога №1: MongoDB — Динамічний реєстр сенсорів та Керування порогом тригера з UI</h3>
+                <p class="text-xs text-zinc-300 leading-relaxed mb-3">
+                    Чому саме MongoDB? Тому що датчики різних моделей мають різний набір паспортних характеристик (<em>Schema-less / Polymorphic Pattern</em>), і ними зручно керувати напряму з фронтенду у форматі JSON.
+                </p>
+                <ul class="list-disc pl-5 space-y-2 text-xs text-zinc-300">
+                    <li>
+                        <strong>Колекція <code class="text-green-300">sensors</code>:</strong> зберігає документи всіх датчиків об'єкта. Кожен документ обов'язково має вкладений об'єкт <code class="text-green-300">specs</code> із різною структурою для різних датчиків (наприклад: у датчика температури <code class="text-zinc-400">{"model": "DS18B20", "accuracy": "±0.5C", "zone": "Main"}</code>, а у датчика CO2 — <code class="text-zinc-400">{"calibration_date": "2026-01-10", "max_ppm": 5000, "interface": "I2C"}</code>).
+                    </li>
+                    <li>
+                        <strong>Додавання та видалення сенсора через фронтенд (<code class="text-green-300">POST /api/sensors</code>, <code class="text-green-300">DELETE /api/sensors/{code}</code>):</strong> на веб-сторінці має бути форма «Додати новий сенсор у MongoDB» (назва, код метрики, одиниця виміру, локація/модель). Щойно студент натискає «Додати» — документ зберігається в колекцію <code class="text-green-300">sensors</code> і <strong>миттєво з'являється у списку обладнання на фронтенді</strong>.
+                    </li>
+                    <li>
+                        <strong>Редагування правила автоматизації з фронтенду (<code class="text-green-300">PUT /api/rules</code>):</strong> у колекції <code class="text-green-300">rules</code> зберігається документ активного тригера варіанта (наприклад, <code class="text-zinc-400">{"metric": "temp", "operator": ">", "threshold": 26.0, "action_state": "COOLING"}</code>). Студент має змогу прямо на сайті змінити число <code class="text-green-300">threshold</code> — воно оновлюється в MongoDB через <code class="text-green-300">$set</code>, і бекенд одразу перераховує стан реле!
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Redis Requirements -->
+            <div class="bg-brand-card border-l-4 border-l-red-500 border border-brand-border rounded-lg p-5">
+                <h3 class="text-base font-bold text-red-400 mb-2">Вимога №2: Redis — Миттєві прапорці стану (Hash) та Кеш Агрегаційного Дашборду (SETEX)</h3>
+                <ul class="list-disc pl-5 space-y-2 text-xs text-zinc-300">
+                    <li>
+                        <strong>Швидкий стан об'єкта (<code class="text-red-300">Hash device:state</code>):</strong> зберігає останні відомі показники всіх сенсорів та поточний прапорець стану виконавчого пристрою (<code class="text-red-300">actuator_status</code> — наприклад, <code class="text-zinc-400">NORMAL</code> або <code class="text-zinc-400">COOLING / EMERGENCY_SHUTDOWN</code>). Коли студент змінює поріг у MongoDB або приходить новий вимір, статус у Redis миттєво оновлюється.
+                    </li>
+                    <li>
+                        <strong>Кешування агрегованих графіків (<code class="text-red-300">String cache:dashboard:analytics</code> з TTL 60 сек):</strong> реалізує патерн <strong>Cache-Aside</strong>. Розраховані зі ScyllaDB точки двох графіків зберігаються у Redis на 60 секунд. На UI обов'язково виводиться бейдж статусу кешу (<strong>REDIS_CACHE_HIT</strong> із таймером TTL або <strong>SCYLLADB_AGGREGATED_MISS</strong>) та кнопка «Скинути кеш Redis».
+                    </li>
+                </ul>
+            </div>
+
+            <!-- ScyllaDB Requirements -->
+            <div class="bg-brand-card border-l-4 border-l-blue-500 border border-brand-border rounded-lg p-5">
+                <h3 class="text-base font-bold text-blue-400 mb-2">Вимога №3: ScyllaDB — Сирі часові ряди та Два Агрегаційні Графіки на Дашборді</h3>
+                <ul class="list-disc pl-5 space-y-2 text-xs text-zinc-300">
+                    <li>
+                        <strong>Таблиця часових рядів у ScyllaDB:</strong>
+                        <div class="bg-black/40 p-2.5 rounded font-mono text-[11px] text-blue-300 mt-1">
+                            CREATE KEYSPACE IF NOT EXISTS smart_monitoring WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};<br>
+                            CREATE TABLE IF NOT EXISTS smart_monitoring.sensor_history (<br>
+                            &nbsp;&nbsp;object_id text, ts timestamp, val1 double, val2 double, val3 double, alert_triggered int,<br>
+                            &nbsp;&nbsp;PRIMARY KEY (object_id, ts)<br>
+                            ) WITH CLUSTERING ORDER BY (ts DESC);
+                        </div>
+                    </li>
+                    <li>
+                        <strong>Генерація щонайменше 720 історичних записів (за 12 годин):</strong> скрипт наповнює ScyllaDB похвилинними даними за останні 12 годин із реалістичними коливаннями та періодичними перевищеннями порогу (<code class="text-blue-300">alert_triggered = 1</code>).
+                    </li>
+                    <li>
+                        <strong>Два обов'язкові агрегаційні графіки (Chart.js):</strong>
+                        <ol class="list-decimal pl-5 mt-1 space-y-1 text-zinc-300">
+                            <li><strong>Графік №1 (Multi-Line Chart):</strong> погодинний коридор значень головної метрики — 3 лінії на одному графіку (<strong>Min</strong>, <strong>Avg</strong>, <strong>Max</strong> за кожну годину).</li>
+                            <li><strong>Графік №2 (Bar Chart):</strong> погодинна гістограма кількості спрацювань тригера автоматизації (<strong>SUM(alert_triggered)</strong> за кожну годину).</li>
+                        </ol>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 5: AI PROMPTS -->
+    <div id="tab-ai-prompts" class="tab-content space-y-6">
+        <h2 class="text-xl font-semibold text-white">Промпти для генерації коду через безкоштовні AI інструменти</h2>
+        <p class="text-sm text-brand-textMuted">
+            Скопіюйте ці промпти, підставте дані свого індивідуального варіанта та відправте в Gemini, Kimi або будь-який інший AI-інструмент. Список безкоштовних варіантів і порядок перемикання між ними описані у вкладці «Безкоштовні AI-інструменти».
+        </p>
+
+        <!-- Prompt 1 -->
+        <div class="bg-brand-card border border-brand-border rounded-lg p-5">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-blue-400">Промпт №1: Ініціалізація баз + Backend API (MongoDB CRUD + Redis Cache + ScyllaDB Aggregation)</h3>
+                <button onclick="copyPrompt('prompt-1')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] px-2 py-1 rounded">Копіювати</button>
+            </div>
+            <pre class="p-3 bg-black/40 rounded text-[11px] font-mono whitespace-pre-wrap text-zinc-300 border border-zinc-800" id="prompt-1">Я розробляю локальний навчальний проєкт на Python (FastAPI) з трьома NoSQL базами даних:
+1. MongoDB (`mongodb://localhost:27017`, база `app_db`)
+2. Redis (`localhost:6379`, decode_responses=True)
+3. ScyllaDB (`localhost:9042`, keyspace `smart_monitoring`)
+
+Мій індивідуальний варіант № [Вкажи номер]:
+- Об'єкт моніторингу: [Впиши назву, наприклад "Розумна квартира"]
+- Три базові сенсори: [Впиши свої метрики, наприклад "temp (°C), humidity (%), lux (Lux)"]
+- Правило тригера автоматизації: [Впиши правило свого варіанта, наприклад "якщо temp > 26 -> кондиціонер COOLING"]
+
+Напиши мені два файли: `seed_data.py` та `main.py`.
+
+У файлі `seed_data.py`:
+1. У MongoDB створює:
+   - Колекцію `sensors` (за стандартом Zigbee2MQTT Exposes / Tasmota): додає 3 документи моїх базових сенсорів, де кожен документ має `code`, `ieee_address` (наприклад, `"0x00158d00045b2c91"`), `vendor` (наприклад, `"Aqara"`, `"Sonoff"`, `"Sensirion"`), `model` (наприклад, `"WSDCGQ11LM"`, `"SCD41"`), `unit` та вкладений об'єкт `specs` із різними полями (`value_min`, `value_max`, `accuracy`, `interface`, `calibration_date`, `mount_zone`).
+   - Колекцію `rules`: зберігає документ правила автоматизації `{"object_name": "...", "metric": "...", "operator": ">", "threshold": ..., "active_state": "...", "normal_state": "NORMAL"}`.
+2. У ScyllaDB створює keyspace `smart_monitoring` та таблицю `sensor_history (object_id text, ts timestamp, device_mac text, val1 double, val2 double, val3 double, linkquality int, battery_mv int, alert_triggered int, PRIMARY KEY (object_id, ts)) WITH CLUSTERING ORDER BY (ts DESC)`. Генерує 720 історичних записів за останні 12 годин (крок 1 хвилина) із реалістичними коливаннями, показниками радіоканалу `linkquality` (110..255 LQI), напругою батареї `battery_mv` (2850..3100 mV) та періодичними піками, де спрацьовує поріг (`alert_triggered = 1`).
+3. У Redis записує поточні значення сенсорів, а також діагностику телеметрії (`linkquality`, `battery_mv`, `rssi_dbm`, `actuator_status`) у Hash `device:state`.
+
+У файлі `main.py` (FastAPI):
+1. `GET "/"` — віддає файл `index.html`.
+2. Робота з MongoDB (відображення та керування з фронтенду):
+   - `GET "/api/mongo/config"` — повертає список усіх сенсорів із колекції `sensors` та поточне правило з колекції `rules`.
+   - `POST "/api/mongo/sensors"` — додає новий сенсор у колекцію `sensors` (приймає `code`, `name`, `unit` та довільний об'єкт `specs`), а також ініціалізує для нього початкове значення в Redis Hash `device:state`.
+   - `DELETE "/api/mongo/sensors/{code}"` — видаляє сенсор із колекції `sensors`.
+   - `PUT "/api/mongo/rules"` — оновлює значення порогу `threshold` у колекції `rules` в MongoDB, після чого одразу перевіряє поточне значення датчика в Redis Hash `device:state` і автоматично перемикає `actuator_status` у Redis!
+3. Робота з Redis Live State:
+   - `GET "/api/redis/state"` — миттєво повертає всі поля з Redis Hash `device:state`.
+   - `POST "/api/redis/simulate-tick"` — генерує новий поточний вимір, звіряє його з актуальним порогом із MongoDB, оновлює Redis Hash `device:state` і додає рядок у ScyllaDB.
+4. Робота зі ScyllaDB та Кешем Дашборду (Cache-Aside):
+   - `GET "/api/analytics"` — перевіряє ключ `cache:dashboard:analytics` у Redis. Якщо ключ є — повертає JSON із `"source": "REDIS_CACHE_HIT"` та поточним `"ttl"`. Якщо немає (Cache MISS) — вибирає дані зі ScyllaDB за останні 12 годин, групує їх по годинах (12 точок) і обчислює для кожної години: `min_val`, `avg_val`, `max_val` першого датчика та `alerts_count` (суму `alert_triggered`). Зберігає результат у Redis через `SETEX` на 60 секунд і повертає з `"source": "SCYLLADB_AGGREGATED_MISS"`.
+   - `POST "/api/cache/clear"` — видаляє ключ `cache:dashboard:analytics` із Redis.</pre>
+        </div>
+
+        <!-- Prompt 2 -->
+        <div class="bg-brand-card border border-brand-border rounded-lg p-5">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-blue-400">Промпт №2: Фронтенд Дашборд із формами MongoDB, статусами Redis та графіками ScyllaDB (index.html)</h3>
+                <button onclick="copyPrompt('prompt-2')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] px-2 py-1 rounded">Копіювати</button>
+            </div>
+            <pre class="p-3 bg-black/40 rounded text-[11px] font-mono whitespace-pre-wrap text-zinc-300 border border-zinc-800" id="prompt-2">Напиши один файл `index.html` (Tailwind CSS CDN + Chart.js CDN) у темній темі для мого локального FastAPI бекенду (`http://localhost:8000`). Інтерфейс має наочно показувати роботу кожної з трьох баз даних у трьох чітко підписаних секціях:
+
+Секція 1: "Реєстр сенсорів та Правила автоматизації (MongoDB)"
+- Відображає картки всіх зареєстрованих сенсорів із колекції `sensors` разом із їхніми вкладеними JSON-характеристиками `specs` та кнопкою видалення.
+- Містить компактну форму "Додати новий сенсор у MongoDB" (поля: код, назва, одиниця виміру, модель/локація). При відправці викликає `POST /api/mongo/sensors` і новий датчик миттєво з'являється у списку без перезавантаження сторінки!
+- Містить блок "Правило тригера": показує поточну умову та поле вводу для зміни порогу `threshold` із кнопкою "Оновити поріг у MongoDB" (`PUT /api/mongo/rules`).
+
+Секція 2: "Миттєвий стан об'єкта та Автоматизація (Redis Hash)"
+- Показує поточні значення датчиків із `GET /api/redis/state`, яскравий бейдж стану виконавчого пристрою (`actuator_status`) та кнопку "Згенерувати новий вимір" (`POST /api/redis/simulate-tick`).
+
+Секція 3: "Агрегаційний Дашборд Часових Рядів (ScyllaDB + Redis Cache-Aside)"
+- Панель статусу кешу: яскравий індикатор джерела даних (`REDIS_CACHE_HIT` із залишком TTL у секундах або `SCYLLADB_AGGREGATED_MISS`), кнопка "Оновити графіки" та кнопка "Скинути кеш Redis" (`POST /api/cache/clear`).
+- Графік №1 (Line Chart): "Погодинний коридор значень (Min / Avg / Max)" — 3 лінії на одному графіку.
+- Графік №2 (Bar Chart): "Кількість аварійних спрацювань тригера по годинах" — стовпчикова гістограма (`alerts_count`).</pre>
+        </div>
+    </div>
+
+    <!-- TAB: FREE AI TOOLS -->
+    <div id="tab-free-ai" class="tab-content space-y-5">
+        <div class="flex items-baseline justify-between gap-3">
+            <h2 class="text-xl font-semibold text-white">Безкоштовні AI-інструменти для vibe coding</h2>
+            <span class="text-[11px] text-brand-textMuted whitespace-nowrap">Перевірено 6.11.2026</span>
+        </div>
+
+        <p class="text-sm text-zinc-300 leading-relaxed">
+            <strong class="text-white">Одного інструмента на весь проєкт не вистачить:</strong> агент, який сам читає і править файли, швидко витрачає безкоштовну квоту. Працюйте кількома по черзі. Чим більше різних інструментів ви спробуєте, тим краще: так ви порівняєте їхню швидкість і якість на власному проєкті.
+        </p>
+
+        <div class="bg-brand-card border border-brand-border rounded-lg overflow-hidden">
+            <table class="w-full text-left text-xs text-zinc-300">
+                <thead class="bg-zinc-800/50 uppercase tracking-wider text-white border-b border-brand-border">
+                    <tr>
+                        <th class="p-3 w-8">№</th>
+                        <th class="p-3">Інструмент</th>
+                        <th class="p-3">Що безкоштовно</th>
+                        <th class="p-3">Обмеження</th>
+                        <th class="p-3">Як почати</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-800">
+                    <tr class="bg-blue-500/5">
+                        <td class="p-3 font-mono text-blue-400">1</td>
+                        <td class="p-3"><a class="text-blue-400 hover:underline font-semibold" href="https://antigravity.google/" target="_blank" rel="noopener">Google Antigravity</a><br><span class="text-[11px] text-brand-textMuted">IDE та CLI</span></td>
+                        <td class="p-3">Gemini 3.8 Flash. Tab-підказки та Command-запити без ліміту, агентні задачі з тижневою квотою, розмір якої Google не публікує.</td>
+                        <td class="p-3">Квота оновлюється раз на тиждень, невикористане не переноситься. Claude 4.6 та GPT-OSS-120b зникнуть з безкоштовного плану 18.11.2026. Gemini CLI для безкоштовних акаунтів більше не працює.</td>
+                        <td class="p-3"><a class="text-blue-400 hover:underline" href="https://antigravity.google/docs/plans/" target="_blank" rel="noopener">Ліміти</a></td>
+                    </tr>
+                    <tr class="bg-blue-500/5">
+                        <td class="p-3 font-mono text-blue-400">2</td>
+                        <td class="p-3"><a class="text-blue-400 hover:underline font-semibold" href="https://opencode.ai/" target="_blank" rel="noopener">OpenCode</a><br><span class="text-[11px] text-brand-textMuted">Термінал, десктоп</span></td>
+                        <td class="p-3">Працює з коробки: агент і моделі Zen (DeepSeek Flash, GLM Flash). Реєстрація та ключі не потрібні. Найшвидший з безкоштовних.</td>
+                        <td class="p-3">Набір моделей змінюється, ліміт не публікується. Безкоштовні моделі працюють лише всередині OpenCode.</td>
+                        <td class="p-3"><code class="text-yellow-400">npm install -g @opencode/cli</code><br><span class="text-[11px] text-brand-textMuted">далі <code class="text-zinc-300">opencode</code>, модель через <code class="text-zinc-300">/models</code></span></td>
+                    </tr>
+                    <tr class="bg-blue-500/5">
+                        <td class="p-3 font-mono text-blue-400">3</td>
+                        <td class="p-3"><a class="text-blue-400 hover:underline font-semibold" href="https://kilo.ai/install" target="_blank" rel="noopener">Kilo Code</a><br><span class="text-[11px] text-brand-textMuted">VS Code, JetBrains, CLI</span></td>
+                        <td class="p-3">Працює з коробки. Режим Auto Free (<code class="text-zinc-200">kilo-auto/free</code>) сам обирає безкоштовну модель. Зручний, якщо працюєте в редакторі.</td>
+                        <td class="p-3">Помітно повільніший за OpenCode. Близько 200 запитів на годину з однієї IP-адреси, набір моделей змінюється.</td>
+                        <td class="p-3"><code class="text-yellow-400">npm install -g @kilocode/cli</code><br><span class="text-[11px] text-brand-textMuted">або у VS Code: Extensions, «Kilo Code», Install Pre-Release Version</span></td>
+                    </tr>
+                    <tr>
+                        <td class="p-3 font-mono text-zinc-500">4</td>
+                        <td class="p-3"><a class="text-blue-400 hover:underline font-semibold" href="https://console.groq.com/" target="_blank" rel="noopener">Groq + Codex CLI</a><br><span class="text-[11px] text-brand-textMuted">API-ключ і агент у терміналі</span></td>
+                        <td class="p-3">gpt-oss-120b, gpt-oss-20b, Qwen 3.8 27B: до 1000 запитів і 200 тисяч токенів на день на модель. Без картки. Найщедріший опублікований ліміт.</td>
+                        <td class="p-3">Власного CLI немає. 8 тисяч токенів на хвилину, тому агент швидко впирається в rate limit. Давайте невеликі задачі.</td>
+                        <td class="p-3"><a class="text-blue-400 hover:underline" href="https://console.groq.com/keys" target="_blank" rel="noopener">Ключ</a>, налаштування нижче</td>
+                    </tr>
+                    <tr>
+                        <td class="p-3 font-mono text-zinc-500">5</td>
+                        <td class="p-3"><span class="font-semibold text-white">Веб-чати</span><br><span class="text-[11px] text-brand-textMuted"><a class="text-blue-400 hover:underline" href="https://www.kimi.com/" target="_blank" rel="noopener">Kimi</a>, <a class="text-blue-400 hover:underline" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a>, <a class="text-blue-400 hover:underline" href="https://aistudio.google.com/" target="_blank" rel="noopener">Gemini</a></span></td>
+                        <td class="p-3">Чат витрачає значно менше токенів, ніж агент, який перечитує проєкт на кожному кроці, і ліміти в чатах зазвичай більші. Добре для одного файлу або питання.</td>
+                        <td class="p-3">Код треба копіювати в проєкт вручну. У Kimi безкоштовний лише веб, Kimi Code CLI платний (від плану Plus). У ChatGPT так само: безкоштовний лише чат, Codex CLI платний. У цьому завданні Codex CLI використовується безкоштовно через ключ Groq.</td>
+                        <td class="p-3"><code class="text-zinc-300">index.html</code>, CQL-схема, пояснення помилки</td>
+                    </tr>
+                    <tr>
+                        <td class="p-3 font-mono text-zinc-500">6</td>
+                        <td class="p-3"><span class="font-semibold text-white">Запасні</span><br><span class="text-[11px] text-brand-textMuted"><a class="text-blue-400 hover:underline" href="https://cline.bot/" target="_blank" rel="noopener">Cline</a>, <a class="text-blue-400 hover:underline" href="https://github.com/features/copilot" target="_blank" rel="noopener">Copilot Free</a>, <a class="text-blue-400 hover:underline" href="https://openrouter.ai/" target="_blank" rel="noopener">OpenRouter</a>, <a class="text-blue-400 hover:underline" href="https://ollama.com/" target="_blank" rel="noopener">Ollama</a></span></td>
+                        <td class="p-3">Cline працює з вашим ключем. Copilot Free дає 2000 підказок на місяць, студентам більше через <a class="text-blue-400 hover:underline" href="https://education.github.com/pack" target="_blank" rel="noopener">Student Developer Pack</a>. OpenRouter: моделі :free, 50 запитів на день. Ollama: локальні моделі без квот.</td>
+                        <td class="p-3">OpenRouter: 1000 запитів на день після одноразового поповнення на $10. Ollama потребує потужного ноутбука, разом із ScyllaDB у Docker пам'яті вистачить не всім.</td>
+                        <td class="p-3">Коли перші п'ять вже впираються в ліміт</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="text-xs text-brand-textMuted">Перші три рядки виділені: з них варто починати. Номер у таблиці збігається з рекомендованим порядком роботи.</p>
+
+        <details class="bg-brand-card border border-brand-border rounded-lg">
+            <summary class="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-white">Налаштування Codex CLI з Groq</summary>
+            <div class="px-4 pb-4 space-y-3 border-t border-brand-border pt-3">
+                <p class="text-xs text-zinc-300 leading-relaxed">
+                    API Groq сумісний з OpenAI Responses API, тому до нього підключається відкритий <a class="text-blue-400 hover:underline" href="https://github.com/openai/codex" target="_blank" rel="noopener">Codex CLI</a>. Для коду Groq радить модель <code class="text-yellow-400">openai/gpt-oss-120b</code>.
+                </p>
+                <ol class="text-xs text-zinc-300 leading-relaxed list-decimal pl-5 space-y-1">
+                    <li><code class="text-yellow-400">npm install -g @openai/codex</code></li>
+                    <li><code class="text-yellow-400">export GROQ_API_KEY=ваш_ключ</code> (Windows PowerShell: <code class="text-yellow-400">$env:GROQ_API_KEY="ваш_ключ"</code>)</li>
+                    <li>Додайте у <code class="text-yellow-400">~/.codex/config.toml</code>:</li>
+                </ol>
+                <div class="relative">
+                    <pre class="p-3 rounded text-[11px] font-mono text-zinc-300 overflow-x-auto" id="codex-groq-config">model = "openai/gpt-oss-120b"
+model_provider = "groq"
+
+[model_providers.groq]
+name = "Groq"
+base_url = "https://api.groq.com/openai/v1"
+env_key = "GROQ_API_KEY"
+wire_api = "responses"</pre>
+                    <button onclick="copyPrompt('codex-groq-config')" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] px-2 py-1 rounded">Копіювати</button>
+                </div>
+                <p class="text-xs text-zinc-400">Запуск: <code class="text-zinc-300">codex</code> у папці проєкту. Формат конфігу може змінюватись між версіями, звіряйтесь з <a class="text-blue-400 hover:underline" href="https://console.groq.com/docs/responses-api" target="_blank" rel="noopener">документацією Groq</a>.</p>
+            </div>
+        </details>
+
+        <div>
+            <h3 class="text-sm font-semibold text-white mb-2">Як перемикатись між інструментами</h3>
+            <ul class="text-xs text-zinc-300 leading-relaxed space-y-1.5">
+                <li>Тримайте в корені <code class="text-yellow-400">PROJECT_CONTEXT.md</code>: номер варіанта, сенсори, тригер, структура папок, що вже працює, що далі, відомі помилки. Новий інструмент прочитає його і не проситиме пояснювати все з нуля.</li>
+                <li>Комітьте після кожного робочого кроку. Інакше наступний інструмент витратить квоту на розбір недописаного коду.</li>
+                <li>Економте токени: одна невелика задача за раз, лише потрібний файл і текст помилки, логи Docker обрізайте до останніх 30-50 рядків, нова розмова на кожну задачу.</li>
+                <li>Квоти оновлюються раз на добу, тиждень або місяць, тому не залишайте роботу на останній вечір. Якщо закінчилось усе, дописуйте вручну: на захисті питатимуть про бази даних, а не про вибір AI.</li>
+            </ul>
+        </div>
+
+        <p class="text-xs text-brand-textMuted leading-relaxed">
+            Ліміти безкоштовних планів змінюються часто, переважно в бік зменшення. Актуальний зведений список з датами перевірки: <a class="text-blue-400 hover:underline" href="https://mvalentsev.github.io/awesome-free-ai-coding/" target="_blank" rel="noopener">awesome-free-ai-coding</a>.
+            Більшість безкоштовних планів можуть використовувати ваші промпти для навчання моделей, тому не вставляйте в них паролі, токени та особисті дані.
+        </p>
+    </div>
+
+    <!-- TAB 6: GRADING -->
+    <div id="tab-grading" class="tab-content space-y-6">
+        <h2 class="text-xl font-semibold text-white">Вимоги до здачі та шкала оцінювання</h2>
+
+        <div class="bg-brand-card border border-brand-border rounded-lg overflow-hidden">
+            <table class="w-full text-left text-sm text-zinc-300">
+                <thead class="bg-zinc-800/50 text-xs uppercase tracking-wider text-white border-b border-brand-border">
+                    <tr>
+                        <th class="p-4">Критерій здачі</th>
+                        <th class="p-4">Бали</th>
+                        <th class="p-4">Що перевіряє викладач на захисті</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-800">
+                    <tr>
+                        <td class="p-4 font-semibold text-white">1. Робота з MongoDB з фронтенду (Реєстр сенсорів і поріг)</td>
+                        <td class="p-4 text-green-400 font-mono">+25</td>
+                        <td class="p-4">Студент через форму на UI додає новий сенсор — він одразу з'являється з поліморфним полем <code>specs</code>. Студент змінює поріг тригера в UI — він оновлюється в MongoDB і перемикає реле.</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-semibold text-white">2. Live State у Redis Hash та логіка автоматизації</td>
+                        <td class="p-4 text-green-400 font-mono">+20</td>
+                        <td class="p-4">Поточні показання сенсорів та прапорець стану виконавчого механізму (<code>actuator_status</code>) миттєво читаються і оновлюються в Redis Hash.</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-semibold text-white">3. Агрегаційний Дашборд зі ScyllaDB (2 графіки)</td>
+                        <td class="p-4 text-green-400 font-mono">+30</td>
+                        <td class="p-4">У ScyllaDB згенеровано 720+ записів. На дашборді будуються Графік №1 (Min/Avg/Max по годинах) та Графік №2 (Гістограма тривог по годинах).</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-semibold text-white">4. Кешування дашборду в Redis (Cache-Aside з TTL)</td>
+                        <td class="p-4 text-green-400 font-mono">+25</td>
+                        <td class="p-4">При натисканні «Скинути кеш» графіки рахуються зі ScyllaDB (<code>SCYLLADB_AGGREGATED_MISS</code>), а при повторному запиті миттєво беруться з Redis (<code>REDIS_CACHE_HIT</code> із таймером TTL).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bg-brand-card border border-brand-border rounded-lg p-5">
+            <h3 class="text-sm font-semibold text-white mb-2">Контрольні питання при захисті:</h3>
+            <ol class="list-decimal pl-5 space-y-2 text-xs text-zinc-300">
+                <li>Чому реєстр сенсорів зі специфічними характеристиками (<code>specs</code>) та правила автоматизації зручно зберігати саме в документній базі MongoDB?</li>
+                <li>Як зміна порогу тривоги у колекції MongoDB впливає на прапорець <code>actuator_status</code> у Redis Hash?</li>
+                <li>Чому для побудови графіка за 12 годин ми віддаємо на фронтенд агреговані точки (Min/Avg/Max по годинах), а не всі сирі записи зі ScyllaDB?</li>
+                <li>Як працює патерн Cache-Aside у маршруті <code>/api/analytics</code> і навіщо ми ставимо TTL 60 секунд на кеш дашборду в Redis?</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Script for Tab Switching & Copy Utilities -->
+    <script>
+        function switchTab(tabId) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-brand-accent', 'text-white');
+                btn.classList.add('bg-brand-card', 'text-brand-textMuted');
+            });
+
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('bg-brand-card', 'text-brand-textMuted');
+            activeBtn.classList.add('bg-brand-accent', 'text-white');
+        }
+
+        function copyCode() {
+            const codeText = document.getElementById('compose-code').innerText;
+            navigator.clipboard.writeText(codeText).then(() => {
+                alert('Конфігурацію Docker Compose успішно скопійовано!');
+            });
+        }
+
+        function copyPrompt(id) {
+            const promptText = document.getElementById(id).innerText;
+            navigator.clipboard.writeText(promptText).then(() => {
+                alert('Текст промпту успішно скопійовано!');
+            });
+        }
+    </script>
+</body>
+</html>

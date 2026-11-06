@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>POC — Database Labs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-neutral-900 text-neutral-100 p-6 max-w-3xl mx-auto space-y-6">
+  <h1 class="text-2xl font-bold">Примітивний POC (Mongo + Redis + Scylla)</h1>
+  <p class="text-sm text-neutral-400">Бекенд: <code class="text-amber-300">http://localhost:8000</code>. Спочатку <code class="text-amber-300">docker compose up -d</code> та <code class="text-amber-300">python seed_data.py</code>.</p>
+
+  <section class="border border-neutral-700 rounded p-4 space-y-2">
+    <h2 class="font-semibold text-green-400">MongoDB</h2>
+    <button id="btn-config" class="bg-green-700 hover:bg-green-600 px-3 py-1 rounded text-sm">GET /api/mongo/config</button>
+    <pre id="out-config" class="text-xs bg-black/50 p-2 rounded overflow-auto max-h-40"></pre>
+    <div class="flex flex-wrap gap-2 items-center text-sm">
+      <input id="in-code" placeholder="code" class="bg-neutral-800 border border-neutral-600 rounded px-2 py-1 w-24" />
+      <input id="in-name" placeholder="name" class="bg-neutral-800 border border-neutral-600 rounded px-2 py-1 flex-1 min-w-[8rem]" />
+      <input id="in-unit" placeholder="unit" class="bg-neutral-800 border border-neutral-600 rounded px-2 py-1 w-20" />
+      <button id="btn-add" class="bg-green-800 hover:bg-green-700 px-2 py-1 rounded">POST сенсор</button>
+    </div>
+    <div class="flex gap-2 items-center text-sm">
+      <input id="in-thr" type="number" step="0.1" class="bg-neutral-800 border border-neutral-600 rounded px-2 py-1 w-28" />
+      <button id="btn-rule" class="bg-green-800 hover:bg-green-700 px-2 py-1 rounded">PUT поріг</button>
+    </div>
+  </section>
+
+  <section class="border border-neutral-700 rounded p-4 space-y-2">
+    <h2 class="font-semibold text-red-400">Redis</h2>
+    <button id="btn-state" class="bg-red-800 hover:bg-red-700 px-3 py-1 rounded text-sm">GET /api/redis/state</button>
+    <button id="btn-tick" class="bg-red-900 hover:bg-red-800 px-3 py-1 rounded text-sm">POST simulate-tick</button>
+    <pre id="out-state" class="text-xs bg-black/50 p-2 rounded overflow-auto max-h-32"></pre>
+  </section>
+
+  <section class="border border-neutral-700 rounded p-4 space-y-2">
+    <h2 class="font-semibold text-blue-400">Scylla + кеш</h2>
+    <button id="btn-an" class="bg-blue-800 hover:bg-blue-700 px-3 py-1 rounded text-sm">GET /api/analytics</button>
+    <button id="btn-clr" class="bg-neutral-700 hover:bg-neutral-600 px-3 py-1 rounded text-sm">POST скинути кеш</button>
+    <pre id="out-an" class="text-xs bg-black/50 p-2 rounded overflow-auto max-h-48"></pre>
+  </section>
+
+  <script>
+    const api = "";
+    async function j(path, opts) {
+      const r = await fetch(api + path, opts);
+      const t = await r.text();
+      try { return JSON.parse(t); } catch { return t; }
+    }
+    document.getElementById("btn-config").onclick = async () => {
+      document.getElementById("out-config").textContent = JSON.stringify(await j("/api/mongo/config"), null, 2);
+    };
+    document.getElementById("btn-add").onclick = async () => {
+      const body = {
+        code: document.getElementById("in-code").value || "x1",
+        name: document.getElementById("in-name").value || "Тест",
+        unit: document.getElementById("in-unit").value || "-",
+        specs: { demo: true },
+      };
+      const res = await j("/api/mongo/sensors", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      document.getElementById("out-config").textContent = JSON.stringify(res, null, 2);
+    };
+    document.getElementById("btn-rule").onclick = async () => {
+      const thr = parseFloat(document.getElementById("in-thr").value || "26");
+      const res = await j("/api/mongo/rules", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ threshold: thr }) });
+      document.getElementById("out-config").textContent = JSON.stringify(res, null, 2);
+    };
+    document.getElementById("btn-state").onclick = async () => {
+      document.getElementById("out-state").textContent = JSON.stringify(await j("/api/redis/state"), null, 2);
+    };
+    document.getElementById("btn-tick").onclick = async () => {
+      document.getElementById("out-state").textContent = JSON.stringify(await j("/api/redis/simulate-tick", { method: "POST" }), null, 2);
+    };
+    document.getElementById("btn-an").onclick = async () => {
+      document.getElementById("out-an").textContent = JSON.stringify(await j("/api/analytics"), null, 2);
+    };
+    document.getElementById("btn-clr").onclick = async () => {
+      document.getElementById("out-an").textContent = JSON.stringify(await j("/api/cache/clear", { method: "POST" }), null, 2);
+    };
+  </script>
+</body>
+</html>

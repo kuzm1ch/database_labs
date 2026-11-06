@@ -1,0 +1,42 @@
+# Мінімальний стек для перевірки лабораторного завдання (як у docs/index.html).
+services:
+  mongodb:
+    image: mongo:9.0
+    container_name: database_lab_poc_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - poc_mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: app_db
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.10-alpine
+    container_name: database_lab_poc_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --loglevel warning
+    volumes:
+      - poc_redis_data:/data
+    restart: unless-stopped
+
+  scylla:
+    image: scylladb/scylla:2026.3
+    container_name: database_lab_poc_scylla
+    ports:
+      - "9042:9042"
+    # На машинах з низьким лімітом RAM для Docker 1G може не стартувати (Seastar бачить cgroup).
+    command: --developer-mode 1 --overprovisioned 1 --smp 1 --memory 384M
+    volumes:
+      - poc_scylla_data:/var/lib/scylla
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    restart: unless-stopped
+
+volumes:
+  poc_mongo_data:
+  poc_redis_data:
+  poc_scylla_data:
