@@ -4,339 +4,626 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Комплексний VibeCode проєкт — Database Labs</title>
-    <!-- Tailwind CSS CDN -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        brand: {
-                            bg: '#1e1e1e',
-                            card: '#252526',
-                            border: '#3c3c3c',
-                            textMuted: '#aaaaaa',
-                            accent: '#007acc'
-                        }
+                        surface: {
+                            DEFAULT: '#151823',
+                            raised: '#1a1e2b',
+                            overlay: '#20253a'
+                        },
+                        line: '#262c3f',
+                        mongo: '#4ade80',
+                        redis: '#f87171',
+                        scylla: '#38bdf8'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
                     }
                 }
             }
         }
     </script>
     <style>
+        :root {
+            --bg: #0e1016;
+            --surface: #151823;
+            --surface-raised: #1a1e2b;
+            --line: #262c3f;
+            --text: #d7dae3;
+            --text-muted: #8b91a5;
+            --mongo: #4ade80;
+            --redis: #f87171;
+            --scylla: #38bdf8;
+            --accent: #818cf8;
+        }
+        html { scroll-behavior: smooth; }
         body {
-            background-color: #1e1e1e;
-            color: #e1e1e1;
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -10%, rgba(129, 140, 248, 0.07), transparent),
+                radial-gradient(ellipse 60% 40% at 85% 0%, rgba(56, 189, 248, 0.05), transparent);
+            background-attachment: fixed;
+            color: var(--text);
+            font-family: 'Inter', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        ::selection { background: rgba(129, 140, 248, 0.35); color: #fff; }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2c3349; border-radius: 8px; border: 2px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: #3a4260; }
+
+        code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
+        code {
+            background: rgba(129, 140, 248, 0.08);
+            border: 1px solid rgba(129, 140, 248, 0.14);
+            border-radius: 5px;
+            padding: 0.1em 0.35em;
+            font-size: 0.92em;
+            color: #c7cdfd;
         }
         pre {
-            background-color: #1a1a1a;
-            border: 1px solid #2d2d2d;
+            background-color: #0a0c11;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            color: #c2c8d8;
         }
-        .tab-content {
-            display: none;
+        pre code {
+            background: none; border: none; padding: 0; color: inherit;
         }
-        .tab-content.active {
-            display: block;
+
+        a {
+            color: #a5b4fc;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(165, 180, 252, 0.3);
+            transition: color 140ms ease, border-color 140ms ease;
+        }
+        a:hover { color: #c7d2fe; border-bottom-color: #c7d2fe; }
+
+        /* ---- Tabs ---- */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeUp 240ms ease both; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tab-btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 7px 12px;
+            white-space: nowrap;
+            transition: color 140ms ease, background 140ms ease, border-color 140ms ease;
+        }
+        .tab-btn .tab-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: #565d75;
+            margin-right: 6px;
+            transition: color 140ms ease;
+        }
+        .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+        .tab-btn.is-active {
+            color: #eef0ff;
+            background: rgba(129, 140, 248, 0.14);
+            border-color: rgba(129, 140, 248, 0.35);
+        }
+        .tab-btn.is-active .tab-num { color: var(--accent); }
+
+        /* ---- Cards ---- */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        .card-hover { transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease; }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            border-color: #333b58;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        }
+
+        /* ---- DB semantic accents ---- */
+        .db-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10.5px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            padding: 3px 9px;
+            border-radius: 999px;
+            border: 1px solid;
+            white-space: nowrap;
+        }
+        .db-badge-mongo { color: var(--mongo); background: rgba(74, 222, 128, 0.08); border-color: rgba(74, 222, 128, 0.25); }
+        .db-badge-redis { color: var(--redis); background: rgba(248, 113, 113, 0.08); border-color: rgba(248, 113, 113, 0.25); }
+        .db-badge-scylla { color: var(--scylla); background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.25); }
+
+        .db-card { position: relative; overflow: hidden; }
+        .db-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+        }
+        .db-card-mongo::before { background: linear-gradient(90deg, var(--mongo), transparent 70%); }
+        .db-card-redis::before { background: linear-gradient(90deg, var(--redis), transparent 70%); }
+        .db-card-scylla::before { background: linear-gradient(90deg, var(--scylla), transparent 70%); }
+
+        .req { border-left: 3px solid; }
+        .req-mongo { border-left-color: rgba(74, 222, 128, 0.55); }
+        .req-redis { border-left-color: rgba(248, 113, 113, 0.55); }
+        .req-scylla { border-left-color: rgba(56, 189, 248, 0.55); }
+        .req-num-mongo { color: var(--mongo); }
+        .req-num-redis { color: var(--redis); }
+        .req-num-scylla { color: var(--scylla); }
+
+        .db-dot { display: inline-block; width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; }
+        .dot-mongo { background: var(--mongo); box-shadow: 0 0 8px rgba(74,222,128,0.5); }
+        .dot-redis { background: var(--redis); box-shadow: 0 0 8px rgba(248,113,113,0.5); }
+        .dot-scylla { background: var(--scylla); box-shadow: 0 0 8px rgba(56,189,248,0.5); }
+
+        /* ---- Buttons ---- */
+        .btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid var(--line);
+            background: var(--surface-raised);
+            color: var(--text);
+            padding: 7px 14px;
+            border-radius: 8px;
+            transition: background 140ms ease, border-color 140ms ease, color 140ms ease, transform 100ms ease;
+        }
+        .btn:hover { background: var(--surface-overlay); border-color: #3a4260; }
+        .btn:active { transform: scale(0.97); }
+        .btn-accent {
+            background: rgba(129, 140, 248, 0.14);
+            border-color: rgba(129, 140, 248, 0.4);
+            color: #c7cdfd;
+        }
+        .btn-accent:hover { background: rgba(129, 140, 248, 0.22); border-color: rgba(129, 140, 248, 0.6); }
+        .btn.copied {
+            background: rgba(74, 222, 128, 0.12) !important;
+            border-color: rgba(74, 222, 128, 0.5) !important;
+            color: var(--mongo) !important;
+        }
+
+        /* ---- Step cards ---- */
+        .step-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent);
+            background: rgba(129, 140, 248, 0.1);
+            border: 1px solid rgba(129, 140, 248, 0.25);
+            border-radius: 6px;
+            padding: 2px 7px;
+            display: inline-block;
+        }
+
+        /* ---- Tables ---- */
+        .variants-scroll { max-height: 640px; overflow: auto; border-radius: 12px; }
+        .variants-scroll thead th {
+            position: sticky; top: 0; z-index: 2;
+            background: var(--surface-raised);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 1px 0 var(--line);
+        }
+        .variants-scroll tbody tr { transition: background 100ms ease; }
+        .variants-scroll tbody tr:hover { background: rgba(129, 140, 248, 0.05); }
+
+        /* ---- Points chips in grading ---- */
+        .pts {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--accent);
+            background: rgba(129, 140, 248, 0.1);
+            border: 1px solid rgba(129, 140, 248, 0.25);
+            border-radius: 7px;
+            padding: 3px 8px;
+            display: inline-block;
+        }
+
+        /* ---- Details ---- */
+        details summary { transition: background 140ms ease; list-style: none; }
+        details summary::-webkit-details-marker { display: none; }
+        details summary:hover { background: rgba(255,255,255,0.03); }
+        details summary::after {
+            content: '+';
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            float: right;
+            transition: transform 160ms ease;
+        }
+        details[open] summary { border-bottom: 1px solid var(--line); }
+        details[open] summary::after { content: '–'; }
+
+        /* ---- Focus ---- */
+        button:focus-visible, a:focus-visible, summary:focus-visible {
+            outline: 2px solid rgba(129, 140, 248, 0.6);
+            outline-offset: 2px;
+            border-radius: 6px;
+        }
+
+        /* ---- Sticky nav ---- */
+        .nav-sticky {
+            position: sticky;
+            top: 12px;
+            z-index: 40;
+            background: rgba(14, 16, 22, 0.82);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+        }
+
+        /* ---- Hero gradient text ---- */
+        .hero-accent {
+            background: linear-gradient(100deg, #a5b4fc, #38bdf8 60%, #4ade80);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
         }
     </style>
 </head>
 <body class="p-4 md:p-8 max-w-6xl mx-auto">
 
     <!-- Header -->
-    <header class="mb-8 border-b border-brand-border pb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <header class="mb-6 pb-7 border-b border-line">
         <div>
-            <span class="text-xs font-semibold tracking-wider text-blue-400 uppercase">Database Labs</span>
-            <h1 class="text-3xl font-bold mt-1 text-white">Комплексний VibeCode проєкт</h1>
-            <p class="text-brand-textMuted mt-2 text-sm max-w-2xl">
-                Трирівнева локальна архітектура баз даних (MongoDB + Redis + ScyllaDB): керування реєстром сенсорів, живі стани, агрегаційні дашборди та кешування.
-            </p>
-        </div>
-        <div class="flex items-center gap-2 self-start md:self-center bg-brand-card px-3 py-1.5 rounded border border-brand-border text-xs text-brand-textMuted">
-            <span class="w-2 h-2 rounded-full bg-green-500"></span>
-            Формат: Локальний запуск (100% Offline)
+                <div class="flex items-center gap-2.5 mb-2">
+                    <span class="text-[11px] font-mono font-medium tracking-widest uppercase text-indigo-300/80">Database Labs</span>
+                    <span class="text-[11px] font-mono text-zinc-600">·</span>
+                    <span class="text-[11px] font-mono tracking-widest uppercase text-zinc-500">Модульний проєкт</span>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-white">
+                    Комплексний <span class="hero-accent">VibeCode</span> проєкт
+                </h1>
+                <p class="text-zinc-400 mt-3 text-sm max-w-2xl leading-relaxed">
+                    Трирівнева локальна архітектура баз даних —
+                    <span class="inline-flex items-center gap-1.5"><span class="db-dot dot-mongo"></span>MongoDB</span>,
+                    <span class="inline-flex items-center gap-1.5"><span class="db-dot dot-redis"></span>Redis</span> і
+                    <span class="inline-flex items-center gap-1.5"><span class="db-dot dot-scylla"></span>ScyllaDB</span>:
+                    керування реєстром сенсорів, живі стани, агрегаційні дашборди та кешування.
+                </p>
         </div>
     </header>
 
     <!-- Navigation Tabs -->
-    <nav class="flex flex-wrap gap-2 border-b border-brand-border pb-3 mb-6">
-        <button onclick="switchTab('concept')" id="btn-concept" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-accent text-white">
-            💡 Архітектура та Ролі БД
-        </button>
-        <button onclick="switchTab('variants')" id="btn-variants" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-card text-brand-textMuted hover:bg-zinc-800 hover:text-white">
-            📋 Варіанти завдань (25)
-        </button>
-        <button onclick="switchTab('telemetry')" id="btn-telemetry" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-card text-brand-textMuted hover:bg-zinc-800 hover:text-white">
-            📡 Реальна телеметрія (Зразки)
-        </button>
-        <button onclick="switchTab('compose')" id="btn-compose" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-card text-brand-textMuted hover:bg-zinc-800 hover:text-white">
-            📦 Docker Compose
-        </button>
-        <button onclick="switchTab('tasks')" id="btn-tasks" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-card text-brand-textMuted hover:bg-zinc-800 hover:text-white">
-            🛠️ Технічні вимоги (По кроках)
-        </button>
-        <button onclick="switchTab('ai-prompts')" id="btn-ai-prompts" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-card text-brand-textMuted hover:bg-zinc-800 hover:text-white">
-            🤖 Промпти для AI
-        </button>
-        <button onclick="switchTab('free-ai')" id="btn-free-ai" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-card text-brand-textMuted hover:bg-zinc-800 hover:text-white">
-            🧰 Безкоштовні AI-інструменти
-        </button>
-        <button onclick="switchTab('grading')" id="btn-grading" class="tab-btn px-4 py-2 text-sm font-medium rounded transition-all bg-brand-card text-brand-textMuted hover:bg-zinc-800 hover:text-white">
-            📊 Шкала оцінювання
-        </button>
+    <nav class="nav-sticky flex flex-wrap gap-1.5 p-2 mb-8" role="tablist" aria-label="Розділи інструкції">
+        <button onclick="switchTab('concept')" id="btn-concept" class="tab-btn is-active" role="tab" aria-selected="true"><span class="tab-num">01</span>Вступ та Архітектура</button>
+        <button onclick="switchTab('variants')" id="btn-variants" class="tab-btn" role="tab" aria-selected="false"><span class="tab-num">02</span>Варіанти</button>
+        <button onclick="switchTab('telemetry')" id="btn-telemetry" class="tab-btn" role="tab" aria-selected="false"><span class="tab-num">03</span>Телеметрія</button>
+        <button onclick="switchTab('compose')" id="btn-compose" class="tab-btn" role="tab" aria-selected="false"><span class="tab-num">04</span>Docker</button>
+        <button onclick="switchTab('tasks')" id="btn-tasks" class="tab-btn" role="tab" aria-selected="false"><span class="tab-num">05</span>Вимоги</button>
+        <button onclick="switchTab('ai-prompts')" id="btn-ai-prompts" class="tab-btn" role="tab" aria-selected="false"><span class="tab-num">06</span>Промпти</button>
+        <button onclick="switchTab('free-ai')" id="btn-free-ai" class="tab-btn" role="tab" aria-selected="false"><span class="tab-num">07</span>AI-інструменти</button>
+        <button onclick="switchTab('grading')" id="btn-grading" class="tab-btn" role="tab" aria-selected="false"><span class="tab-num">08</span>Оцінювання</button>
     </nav>
 
     <!-- TAB 1: CONCEPT -->
-    <div id="tab-concept" class="tab-content active space-y-6">
-        <div class="border-l-2 border-blue-500/60 pl-4">
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-blue-400 mb-1">Мета</h2>
+    <div id="tab-concept" class="tab-content active space-y-8">
+
+        <!-- Quick path -->
+        <div class="card p-6">
+            <h2 class="text-xs font-mono font-medium uppercase tracking-widest text-zinc-500 mb-4">Порядок роботи над проєктом</h2>
+            <ol class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-zinc-300">
+                <li class="card-hover bg-surface-raised border border-line rounded-xl p-4 space-y-2.5">
+                    <span class="step-num">Крок 01</span>
+                    <p class="leading-snug text-[13px] text-zinc-300">Оберіть варіант у таблиці <button class="text-indigo-300 hover:text-indigo-200 underline underline-offset-2 decoration-indigo-500/40" onclick="switchTab('variants')">«02 Варіанти»</button></p>
+                </li>
+                <li class="card-hover bg-surface-raised border border-line rounded-xl p-4 space-y-2.5">
+                    <span class="step-num">Крок 02</span>
+                    <p class="leading-snug text-[13px] text-zinc-300">Підніміть бази через <button class="text-indigo-300 hover:text-indigo-200 underline underline-offset-2 decoration-indigo-500/40" onclick="switchTab('compose')">«04 Docker»</button></p>
+                </li>
+                <li class="card-hover bg-surface-raised border border-line rounded-xl p-4 space-y-2.5">
+                    <span class="step-num">Крок 03</span>
+                    <p class="leading-snug text-[13px] text-zinc-300">Згенеруйте код за <button class="text-indigo-300 hover:text-indigo-200 underline underline-offset-2 decoration-indigo-500/40" onclick="switchTab('ai-prompts')">«06 Промпти»</button></p>
+                </li>
+                <li class="card-hover bg-surface-raised border border-line rounded-xl p-4 space-y-2.5">
+                    <span class="step-num">Крок 04</span>
+                    <p class="leading-snug text-[13px] text-zinc-300">Звірте результат з <button class="text-indigo-300 hover:text-indigo-200 underline underline-offset-2 decoration-indigo-500/40" onclick="switchTab('grading')">«08 Оцінювання»</button></p>
+                </li>
+            </ol>
+        </div>
+
+        <!-- Goal -->
+        <div class="border-l-2 border-indigo-400/60 pl-5">
+            <h2 class="text-xs font-mono font-medium uppercase tracking-widest text-indigo-300/80 mb-2">Мета</h2>
             <p class="text-sm leading-relaxed text-zinc-300">
-                Навчитися обирати базу даних під задачу і побудувати локальний веб-додаток, у якому <strong>MongoDB</strong> зберігає реєстр сенсорів і правила, <strong>Redis</strong> тримає поточний стан і кеш, а <strong>ScyllaDB</strong> накопичує історію вимірів для графіків. Друга частина мети: пройти цей шлях з безкоштовними AI-інструментами, порівняти кілька з них і вміти пояснити, який код вони згенерували і чому він працює саме так.
+                Навчитися обирати базу даних під задачу і побудувати локальний веб-додаток, у якому <strong class="text-white font-semibold">MongoDB</strong> зберігає реєстр сенсорів і правила, <strong class="text-white font-semibold">Redis</strong> тримає поточний стан і кеш, а <strong class="text-white font-semibold">ScyllaDB</strong> накопичує історію вимірів для графіків. Друга частина мети: пройти цей шлях з безкоштовними AI-інструментами, порівняти кілька з них і вміти пояснити, який код вони згенерували і чому він працює саме так.
+            </p>
+            <p class="text-sm leading-relaxed text-zinc-300 mt-3">
+                Кожен студент робить додаток <strong class="text-white font-semibold">за своїм варіантом</strong> зі списку. Об'єкт, сенсори і правило свої, але додаток має закривати базові потреби такого моніторингу:
+            </p>
+            <ul class="text-sm text-zinc-300 mt-2 space-y-1.5 list-disc pl-5 marker:text-indigo-400/60">
+                <li>поточний стан сенсорів на екрані;</li>
+                <li>візуалізація історії: графік вимірів за час;</li>
+                <li>пороги (thresholds): задати, змінити і побачити, що сталося, коли значення перетнуло поріг;</li>
+                <li>історія цих подій, а не лише останнє число.</li>
+            </ul>
+        </div>
+
+        <!-- Why three DBs -->
+        <div class="card p-6">
+            <h2 class="text-lg font-semibold text-white mb-2">Чому в одній системі використовуються три різні бази даних?</h2>
+            <p class="text-sm leading-relaxed text-zinc-300">
+                У сучасних IoT та високонавантажених системах одна база даних не може однаково добре вирішувати всі задачі. У цьому проєкті ви будуєте локальний веб-додаток розумного моніторингу, де <strong class="text-white font-semibold">MongoDB</strong> відповідає за гнучкий реєстр обладнання та правил, що редагуються прямо з фронтенду, <strong class="text-white font-semibold">Redis</strong> миттєво віддає поточний стан і кешує важкі розрахунки, а <strong class="text-white font-semibold">ScyllaDB</strong> зберігає тисячі історичних вимірів для побудови агрегаційних графіків.
             </p>
         </div>
-        <div class="bg-brand-card border border-brand-border rounded-lg p-6">
-            <h2 class="text-xl font-semibold text-white mb-3">Головна ідея: Чому в одній системі використовуються 3 різні бази даних?</h2>
-            <p class="text-sm leading-relaxed text-zinc-300">
-                У сучасних IoT та високонавантажених системах одна база даних не може однаково добре вирішувати всі задачі. У цьому проєкті ви будуєте локальний веб-додаток розумного моніторингу, де <strong>MongoDB</strong> відповідає за гнучкий реєстр обладнання та правил, що редагуються прямо з фронтенду, <strong>Redis</strong> миттєво віддає поточний стан і кешує важкі розрахунки, а <strong>ScyllaDB</strong> зберігає тисячі історичних вимірів для побудови агрегаційних графіків.
-            </p>
-        </div>
 
-        <h3 class="text-lg font-semibold text-white mt-6 mb-3">Чіткий розподіл ролей кожної бази даних</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- MongoDB Card -->
-            <div class="bg-brand-card border border-brand-border rounded-lg p-5 flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-green-400 uppercase tracking-wider">1. Реєстр сенсорів і правил</span>
-                        <span class="bg-green-500/10 text-green-400 text-[10px] px-2 py-0.5 rounded border border-green-500/20">MongoDB</span>
+        <!-- DB roles -->
+        <div>
+            <h3 class="text-lg font-semibold text-white mb-4">Чіткий розподіл ролей кожної бази даних</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- MongoDB Card -->
+                <div class="db-card db-card-mongo card card-hover p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3 gap-2">
+                            <span class="text-[13px] font-semibold text-white">1. Реєстр сенсорів і правил</span>
+                            <span class="db-badge db-badge-mongo">MongoDB</span>
+                        </div>
+                        <p class="text-[13px] text-zinc-400 mb-2 leading-relaxed">
+                            Працює напряму з формами на фронтенді. Зберігає колекцію <code>sensors</code> та правила автоматизації:
+                        </p>
+                        <ul class="list-disc pl-4 space-y-1.5 text-xs text-zinc-400 marker:text-mongo/50 leading-relaxed">
+                            <li><strong class="text-zinc-200 font-medium">Гнучка схема (Schema-less):</strong> кожен датчик має власні вкладені метадані (<code>specs</code>: точність, зона, батарея, калібрування).</li>
+                            <li><strong class="text-zinc-200 font-medium">Живий CRUD з UI:</strong> додавання нового сенсора та зміна порогу тривоги (<code>threshold</code>) прямо з браузера без перезапуску коду.</li>
+                        </ul>
                     </div>
-                    <p class="text-sm text-zinc-300 mb-2">
-                        Працює напряму з формами на фронтенді. Зберігає колекцію <code class="text-xs text-green-300 bg-black/40 px-1 py-0.5 rounded">sensors</code> та правила автоматизації:
-                    </p>
-                    <ul class="list-disc pl-4 space-y-1 text-xs text-zinc-400">
-                        <li><strong>Гнучка схема (Schema-less):</strong> кожен датчик має власні вкладені метадані (<code class="text-zinc-200">specs</code>: точність, зона, батарея, калібрування).</li>
-                        <li><strong>Живий CRUD з UI:</strong> додавання нового сенсора та зміна порогу тривоги (<code class="text-zinc-200">threshold</code>) прямо з браузера без перезапуску коду.</li>
-                    </ul>
+                    <div class="border-t border-line mt-4 pt-3 text-[11px] text-zinc-500 font-mono">
+                        find() · insert_one() · update_one({$set}) · delete_one()
+                    </div>
                 </div>
-                <div class="border-t border-brand-border mt-4 pt-3 text-xs text-brand-textMuted">
-                    <strong>Операції:</strong> find(), insert_one(), update_one({$set}), delete_one().
-                </div>
-            </div>
 
-            <!-- Redis Card -->
-            <div class="bg-brand-card border border-brand-border rounded-lg p-5 flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-red-400 uppercase tracking-wider">2. Швидкі стани та Кеш</span>
-                        <span class="bg-red-500/10 text-red-400 text-[10px] px-2 py-0.5 rounded border border-red-500/20">Redis</span>
+                <!-- Redis Card -->
+                <div class="db-card db-card-redis card card-hover p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3 gap-2">
+                            <span class="text-[13px] font-semibold text-white">2. Швидкі стани та Кеш</span>
+                            <span class="db-badge db-badge-redis">Redis</span>
+                        </div>
+                        <p class="text-[13px] text-zinc-400 mb-2 leading-relaxed">
+                            Працює в оперативній пам'яті (In-Memory) для миттєвої відповіді (&lt;1 мс):
+                        </p>
+                        <ul class="list-disc pl-4 space-y-1.5 text-xs text-zinc-400 marker:text-redis/50 leading-relaxed">
+                            <li><strong class="text-zinc-200 font-medium">Live State (Hash):</strong> поточні показники датчиків та прапорець стану реле автоматизації (<code>actuator_status</code>).</li>
+                            <li><strong class="text-zinc-200 font-medium">Query Cache (String + TTL):</strong> кешування готових точок агрегаційних графіків зі ScyllaDB на 60 секунд.</li>
+                        </ul>
                     </div>
-                    <p class="text-sm text-zinc-300 mb-2">
-                        Працює в оперативній пам'яті (In-Memory) для миттєвої відповіді (&lt;1 мс):
-                    </p>
-                    <ul class="list-disc pl-4 space-y-1 text-xs text-zinc-400">
-                        <li><strong>Live State (Hash):</strong> поточні показники датчиків та прапорець стану реле автоматизації (<code class="text-zinc-200">actuator_status</code>).</li>
-                        <li><strong>Query Cache (String + TTL):</strong> кешування готових точок агрегаційних графіків зі ScyllaDB на 60 секунд.</li>
-                    </ul>
+                    <div class="border-t border-line mt-4 pt-3 text-[11px] text-zinc-500 font-mono">
+                        HSET / HGETALL · SETEX / GET / TTL / DEL (Cache-Aside)
+                    </div>
                 </div>
-                <div class="border-t border-brand-border mt-4 pt-3 text-xs text-brand-textMuted">
-                    <strong>Операції:</strong> HSET/HGETALL та SETEX/GET/TTL/DEL (Cache-Aside).
-                </div>
-            </div>
 
-            <!-- ScyllaDB Card -->
-            <div class="bg-brand-card border border-brand-border rounded-lg p-5 flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-blue-400 uppercase tracking-wider">3. Часові ряди та Аналітика</span>
-                        <span class="bg-blue-500/10 text-blue-400 text-[10px] px-2 py-0.5 rounded border border-blue-500/20">ScyllaDB</span>
+                <!-- ScyllaDB Card -->
+                <div class="db-card db-card-scylla card card-hover p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3 gap-2">
+                            <span class="text-[13px] font-semibold text-white">3. Часові ряди та Аналітика</span>
+                            <span class="db-badge db-badge-scylla">ScyllaDB</span>
+                        </div>
+                        <p class="text-[13px] text-zinc-400 mb-2 leading-relaxed">
+                            Зберігає <strong class="text-zinc-200 font-medium">тисячі сирих історичних записів</strong> (Time-Series) кожної хвилини у широких таблицях (Wide-Column):
+                        </p>
+                        <ul class="list-disc pl-4 space-y-1.5 text-xs text-zinc-400 marker:text-scylla/50 leading-relaxed">
+                            <li>Швидка вибірка історії об'єкта за рахунок <strong class="text-zinc-200 font-medium">Partition Key</strong> (<code>object_id</code>) та <strong class="text-zinc-200 font-medium">Clustering Key</strong> (<code>ts DESC</code>).</li>
+                            <li>Джерело сирих даних для розрахунку агрегаційних дашбордів.</li>
+                        </ul>
                     </div>
-                    <p class="text-sm text-zinc-300 mb-2">
-                        Зберігає <strong>тисячі сирих історичних записів</strong> (Time-Series) кожної хвилини у широких таблицях (Wide-Column):
-                    </p>
-                    <ul class="list-disc pl-4 space-y-1 text-xs text-zinc-400">
-                        <li>Швидка вибірка історії об'єкта за рахунок <strong>Partition Key</strong> (<code class="text-zinc-200">object_id</code>) та <strong>Clustering Key</strong> (<code class="text-zinc-200">ts DESC</code>).</li>
-                        <li>Джерело сирих даних для розрахунку агрегаційних дашбордів.</li>
-                    </ul>
-                </div>
-                <div class="border-t border-brand-border mt-4 pt-3 text-xs text-brand-textMuted">
-                    <strong>Операції:</strong> Масовий INSERT та вибірка CQL за діапазоном часу.
+                    <div class="border-t border-line mt-4 pt-3 text-[11px] text-zinc-500 font-mono">
+                        Масовий INSERT · вибірка CQL за діапазоном часу
+                    </div>
                 </div>
             </div>
         </div>
 
-        <h3 class="text-lg font-semibold text-white mt-8 mb-3">Як ці 3 бази взаємодіють між собою на фронтенді?</h3>
-        <div class="bg-brand-card border border-brand-border rounded-lg p-5 space-y-3 text-xs text-zinc-300">
-            <p><strong>Сценарій 1 (MongoDB &rarr; Фронтенд &rarr; Redis):</strong> Користувач відкриває сайт і бачить список зареєстрованих датчиків із колекції <code class="text-green-400">sensors</code> у MongoDB. Через форму на сайті студент додає новий датчик (наприклад, резервний термометр зі специфічним JSON-полем <code class="text-green-400">{"location": "Стеля", "accuracy": "0.1C"}</code>) або змінює поріг спрацювання тривоги (<code class="text-green-400">threshold</code>) прямо в інтерфейсі. Зміни миттєво записуються в MongoDB, відображаються на сторінці, а бекенд одразу перевіряє новий поріг і перемикає статус реле в <strong>Redis Hash</strong>!</p>
-            <p><strong>Сценарій 2 (ScyllaDB &rarr; Агрегація &rarr; Кеш у Redis):</strong> Фронтенд запитує дані для двох аналітичних графіків за останні 12 годин: <strong>(1) Коридор значень Min / Avg / Max по годинах</strong> та <strong>(2) Гістограма кількості спрацювань тривоги по годинах</strong>. При першому запиті бекенд читає 720 сирих записів зі <strong>ScyllaDB</strong>, агрегує їх по годинах і кладе готовий JSON у <strong>Redis</strong> на 60 секунд (<code class="text-yellow-400">SETEX</code>). Усі наступні оновлення сторінки віддають графіки з Redis за 1 мс.</p>
+        <!-- Interaction scenarios -->
+        <div>
+            <h3 class="text-lg font-semibold text-white mb-4">Як ці три бази взаємодіють між собою на фронтенді?</h3>
+            <div class="card p-6 space-y-4 text-[13px] text-zinc-300 leading-relaxed">
+                <div class="flex gap-3">
+                    <div class="flex flex-col items-center gap-1 pt-1.5">
+                        <span class="db-dot dot-mongo"></span>
+                        <span class="w-px flex-1 bg-line"></span>
+                        <span class="db-dot dot-redis"></span>
+                    </div>
+                    <p><strong class="text-white font-semibold">Сценарій 1 (MongoDB → Фронтенд → Redis):</strong> Користувач відкриває сайт і бачить список зареєстрованих датчиків із колекції <code>sensors</code> у MongoDB. Через форму на сайті студент додає новий датчик (наприклад, резервний термометр зі специфічним JSON-полем <code>{"location": "Стеля", "accuracy": "0.1C"}</code>) або змінює поріг спрацювання тривоги (<code>threshold</code>) прямо в інтерфейсі. Зміни миттєво записуються в MongoDB, відображаються на сторінці, а бекенд одразу перевіряє новий поріг і перемикає статус реле в <strong class="text-white font-semibold">Redis Hash</strong>!</p>
+                </div>
+                <div class="flex gap-3">
+                    <div class="flex flex-col items-center gap-1 pt-1.5">
+                        <span class="db-dot dot-scylla"></span>
+                        <span class="w-px flex-1 bg-line"></span>
+                        <span class="db-dot dot-redis"></span>
+                    </div>
+                    <p><strong class="text-white font-semibold">Сценарій 2 (ScyllaDB → Агрегація → Кеш у Redis):</strong> Фронтенд запитує дані для двох аналітичних графіків за останні 12 годин: <strong class="text-white font-semibold">(1) Коридор значень Min / Avg / Max по годинах</strong> та <strong class="text-white font-semibold">(2) Гістограма кількості спрацювань тривоги по годинах</strong>. При першому запиті бекенд читає 720 сирих записів зі <strong class="text-white font-semibold">ScyllaDB</strong>, агрегує їх по годинах і кладе готовий JSON у <strong class="text-white font-semibold">Redis</strong> на 60 секунд (<code>SETEX</code>). Усі наступні оновлення сторінки віддають графіки з Redis за 1 мс.</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- TAB 2: VARIANTS -->
     <div id="tab-variants" class="tab-content space-y-6">
-        <div class="bg-brand-card border border-brand-border rounded-lg p-6">
+        <div class="card p-6">
             <h2 class="text-xl font-semibold text-white mb-2">Таблиця індивідуальних варіантів (25 студентів)</h2>
-            <p class="text-sm text-brand-textMuted mb-4">
-                Кожен студент виконує роботу відповідно до свого номера в списку групи. Три базові сенсори варіанта мають бути зареєстровані як документи в колекції <code class="text-green-400">sensors</code> у MongoDB (плюс можливість додати 4-й кастомний сенсор через UI). Перший сенсор агрегується на Графіку №1 (Min/Avg/Max), а порушення порогу тригера (який теж зберігається і редагується в MongoDB) рахується на Графіку №2.
+            <p class="text-sm text-zinc-400 mb-5 leading-relaxed">
+                Кожен студент виконує роботу відповідно до свого номера в списку групи. Три базові сенсори варіанта мають бути зареєстровані як документи в колекції <code>sensors</code> у MongoDB (плюс можливість додати 4-й кастомний сенсор через UI). Перший сенсор агрегується на Графіку №1 (Min/Avg/Max), а порушення порогу тригера (який теж зберігається і редагується в MongoDB) рахується на Графіку №2.
             </p>
-            
-            <div class="overflow-x-auto border border-brand-border rounded-lg">
-                <table class="w-full text-left text-xs text-zinc-300 divide-y divide-zinc-800">
-                    <thead class="bg-zinc-800/50 uppercase tracking-wider text-white">
+            <div class="variants-scroll border border-line">
+                <table class="w-full text-left text-xs text-zinc-300">
+                    <thead class="uppercase tracking-wider text-[11px] text-zinc-400">
                         <tr>
-                            <th class="p-3">№</th>
-                            <th class="p-3">Об'єкт моніторингу</th>
-                            <th class="p-3">Базові сенсори в MongoDB (Метрики)</th>
-                            <th class="p-3">Правило автоматизації (Поріг редагується в MongoDB)</th>
+                            <th class="p-3 font-semibold">№</th>
+                            <th class="p-3 font-semibold">Об'єкт моніторингу</th>
+                            <th class="p-3 font-semibold">Базові сенсори в MongoDB (Метрики)</th>
+                            <th class="p-3 font-semibold">Правило автоматизації (Поріг редагується в MongoDB)</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-zinc-800/60">
+                    <tbody class="divide-y divide-line/60">
                         <tr>
-                            <td class="p-3 font-semibold text-white">1</td>
-                            <td class="p-3 font-semibold text-blue-400">Розумна квартира</td>
+                            <td class="p-3 font-mono text-zinc-500">1</td>
+                            <td class="p-3 font-semibold text-white">Розумна квартира</td>
                             <td class="p-3">temp (°C), humidity (%), lux (Lux)</td>
                             <td class="p-3">Якщо temp &gt; 26, встановити кондиціонер в Redis на "COOLING", записати тривогу у Scylla.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">2</td>
-                            <td class="p-3 font-semibold text-blue-400">Еко-Котедж</td>
+                            <td class="p-3 font-mono text-zinc-500">2</td>
+                            <td class="p-3 font-semibold text-white">Еко-Котедж</td>
                             <td class="p-3">temp (°C), co2 (ppm), solar_gen (kW)</td>
                             <td class="p-3">Якщо co2 &gt; 1000, встановити вентиляцію в Redis на "ON", записати тривогу у Scylla.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">3</td>
-                            <td class="p-3 font-semibold text-blue-400">Промислова теплиця</td>
+                            <td class="p-3 font-mono text-zinc-500">3</td>
+                            <td class="p-3 font-semibold text-white">Промислова теплиця</td>
                             <td class="p-3">temp (°C), humidity (%), soil_moisture (%)</td>
                             <td class="p-3">Якщо soil_moisture &lt; 30, встановити полив в Redis на "AUTO_ON", записати тривогу у Scylla.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">4</td>
-                            <td class="p-3 font-semibold text-blue-400">Дата-центр</td>
+                            <td class="p-3 font-mono text-zinc-500">4</td>
+                            <td class="p-3 font-semibold text-white">Дата-центр</td>
                             <td class="p-3">temp (°C), rack_power (kW), smoke_detector (0/1)</td>
                             <td class="p-3">Якщо temp &gt; 24 або smoke == 1, встановити сирену на "CRITICAL", записати тривогу у Scylla.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">5</td>
-                            <td class="p-3 font-semibold text-blue-400">Розумний офіс</td>
+                            <td class="p-3 font-mono text-zinc-500">5</td>
+                            <td class="p-3 font-semibold text-white">Розумний офіс</td>
                             <td class="p-3">co2 (ppm), light_level (Lux), occupancy (0/1)</td>
                             <td class="p-3">Якщо co2 &gt; 900, встановити клімат-контроль в Redis на "BOOST", записати тривогу у Scylla.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">6</td>
-                            <td class="p-3 font-semibold text-blue-400">Винний погріб</td>
+                            <td class="p-3 font-mono text-zinc-500">6</td>
+                            <td class="p-3 font-semibold text-white">Винний погріб</td>
                             <td class="p-3">temp (°C), humidity (%), vibration (g)</td>
                             <td class="p-3">Якщо vibration &gt; 2, встановити тривогу на "WINE_ALERT", записати в Scylla.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">7</td>
-                            <td class="p-3 font-semibold text-blue-400">Гідропонна ферма</td>
+                            <td class="p-3 font-mono text-zinc-500">7</td>
+                            <td class="p-3 font-semibold text-white">Гідропонна ферма</td>
                             <td class="p-3">water_ph (pH), water_ec (EC), water_temp (°C)</td>
                             <td class="p-3">Якщо water_ph &lt; 5.5, встановити дозатор лугу на "DOSING" в Redis.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">8</td>
-                            <td class="p-3 font-semibold text-blue-400">Розумний гараж</td>
+                            <td class="p-3 font-mono text-zinc-500">8</td>
+                            <td class="p-3 font-semibold text-white">Розумний гараж</td>
                             <td class="p-3">co_gas (ppm), door_status (0/1), motion (0/1)</td>
                             <td class="p-3">Якщо co_gas &gt; 50, встановити витяжку на "MAX_SPEED", записати аварійний лог.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">9</td>
-                            <td class="p-3 font-semibold text-blue-400">Крипто-ферма</td>
+                            <td class="p-3 font-mono text-zinc-500">9</td>
+                            <td class="p-3 font-semibold text-white">Крипто-ферма</td>
                             <td class="p-3">gpu_temp (°C), fan_speed (RPM), power_usage (kW)</td>
                             <td class="p-3">Якщо gpu_temp &gt; 80, змінити статус живлення на "EMERGENCY_SHUTDOWN" в Redis.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">10</td>
-                            <td class="p-3 font-semibold text-blue-400">Серверна кімната</td>
+                            <td class="p-3 font-mono text-zinc-500">10</td>
+                            <td class="p-3 font-semibold text-white">Серверна кімната</td>
                             <td class="p-3">temp (°C), humidity (%), water_leak (0/1)</td>
                             <td class="p-3">Якщо temp &gt; 25 або water_leak == 1, змінити клапан на "CLOSED" та записати аварію у Scylla.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">11</td>
-                            <td class="p-3 font-semibold text-blue-400">Розумний готель</td>
+                            <td class="p-3 font-mono text-zinc-500">11</td>
+                            <td class="p-3 font-semibold text-white">Розумний готель</td>
                             <td class="p-3">temp (°C), power_sockets (W), card_inserted (0/1)</td>
                             <td class="p-3">Якщо power_sockets &gt; 3500, вимкнути розетки в Redis (встановити "OVERLOAD_OFF").</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">12</td>
-                            <td class="p-3 font-semibold text-blue-400">Аквапонічний басейн</td>
+                            <td class="p-3 font-mono text-zinc-500">12</td>
+                            <td class="p-3 font-semibold text-white">Аквапонічний басейн</td>
                             <td class="p-3">dissolved_oxygen (mg/L), water_temp (°C), turbidity (NTU)</td>
                             <td class="p-3">Якщо dissolved_oxygen &lt; 5, увімкнути додатковий аератор на "ON" в Redis.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">13</td>
-                            <td class="p-3 font-semibold text-blue-400">Розумний склад</td>
+                            <td class="p-3 font-mono text-zinc-500">13</td>
+                            <td class="p-3 font-semibold text-white">Розумний склад</td>
                             <td class="p-3">temp (°C), humidity (%), door_open (0/1)</td>
                             <td class="p-3">Якщо humidity &gt; 65, встановити осушувач повітря на "RUNNING", записати в Scylla.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">14</td>
-                            <td class="p-3 font-semibold text-blue-400">Система поливу саду</td>
+                            <td class="p-3 font-mono text-zinc-500">14</td>
+                            <td class="p-3 font-semibold text-white">Система поливу саду</td>
                             <td class="p-3">soil_moist (%), air_temp (°C), tank_level (%)</td>
                             <td class="p-3">Якщо soil_moist &lt; 30, відкрити клапан поливу на "ACTIVE".</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">15</td>
-                            <td class="p-3 font-semibold text-blue-400">Зарядна EV Станція</td>
+                            <td class="p-3 font-mono text-zinc-500">15</td>
+                            <td class="p-3 font-semibold text-white">Зарядна EV Станція</td>
                             <td class="p-3">connector_temp (°C), current_amp (A), charging_active (0/1)</td>
                             <td class="p-3">Якщо connector_temp &gt; 60, змінити струм на обмеження "HALF_POWER" в Redis.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">16</td>
-                            <td class="p-3 font-semibold text-blue-400">Захищений архів</td>
+                            <td class="p-3 font-mono text-zinc-500">16</td>
+                            <td class="p-3 font-semibold text-white">Захищений архів</td>
                             <td class="p-3">humidity (%), light_lux (Lux), uv_index (uW/cm2)</td>
                             <td class="p-3">Якщо uv_index &gt; 50, встановити статус жалюзі на "CLOSED", логувати в Scylla.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">17</td>
-                            <td class="p-3 font-semibold text-blue-400">Рефрижератор</td>
+                            <td class="p-3 font-mono text-zinc-500">17</td>
+                            <td class="p-3 font-semibold text-white">Рефрижератор</td>
                             <td class="p-3">cargo_temp (°C), g_force (g), doors_locked (0/1)</td>
                             <td class="p-3">Якщо cargo_temp &gt; -15, встановити рефрижератор на "MAX_FREEZING", логувати в Scylla.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">18</td>
-                            <td class="p-3 font-semibold text-blue-400">Розумна пральня</td>
+                            <td class="p-3 font-mono text-zinc-500">18</td>
+                            <td class="p-3 font-semibold text-white">Розумна пральня</td>
                             <td class="p-3">drum_vibration (g), water_usage (L), power_usage (W)</td>
                             <td class="p-3">Якщо drum_vibration &gt; 5, встановити режим захисту "DRUM_HALT" в Redis.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">19</td>
-                            <td class="p-3 font-semibold text-blue-400">Біо-інкубатор</td>
+                            <td class="p-3 font-mono text-zinc-500">19</td>
+                            <td class="p-3 font-semibold text-white">Біо-інкубатор</td>
                             <td class="p-3">temp (°C), co2_level (ppm), o2_percent (%)</td>
                             <td class="p-3">Якщо o2_percent &lt; 19, встановити подачу O2 на "HIGH" в Redis та логувати в Scylla.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">20</td>
-                            <td class="p-3 font-semibold text-blue-400">Киснева станція</td>
+                            <td class="p-3 font-mono text-zinc-500">20</td>
+                            <td class="p-3 font-semibold text-white">Киснева станція</td>
                             <td class="p-3">pressure (bar), o2_purity (%), pump_temp (°C)</td>
                             <td class="p-3">Якщо pressure &gt; 10, встановити аварійний клапан в Redis на "OPEN" для скиду тиску.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">21</td>
-                            <td class="p-3 font-semibold text-blue-400">Система танення снігу</td>
+                            <td class="p-3 font-mono text-zinc-500">21</td>
+                            <td class="p-3 font-semibold text-white">Система танення снігу</td>
                             <td class="p-3">surface_temp (°C), heating_power (kW), moisture_detected (0/1)</td>
                             <td class="p-3">Якщо surface_temp &lt; 2, увімкнути обігрів "ACTIVE_HEATING".</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">22</td>
-                            <td class="p-3 font-semibold text-blue-400">Розумна котельня</td>
+                            <td class="p-3 font-mono text-zinc-500">22</td>
+                            <td class="p-3 font-semibold text-white">Розумна котельня</td>
                             <td class="p-3">boiler_temp (°C), water_pressure (bar), gas_leak (ppm)</td>
                             <td class="p-3">Якщо gas_leak &gt; 100, перекрити подачу газу (встановити "EMERGENCY_SHUTOFF" в Redis).</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">23</td>
-                            <td class="p-3 font-semibold text-blue-400">Погодна метеовежа</td>
+                            <td class="p-3 font-mono text-zinc-500">23</td>
+                            <td class="p-3 font-semibold text-white">Погодна метеовежа</td>
                             <td class="p-3">wind_speed (m/s), air_temp (°C), wind_direction (deg)</td>
                             <td class="p-3">Якщо wind_speed &gt; 25, увімкнути захист анемометра "BRAKE_ON" та записати в Scylla.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">24</td>
-                            <td class="p-3 font-semibold text-blue-400">SPA Басейн</td>
+                            <td class="p-3 font-mono text-zinc-500">24</td>
+                            <td class="p-3 font-semibold text-white">SPA Басейн</td>
                             <td class="p-3">water_temp (°C), chlorine_level (ppm), water_ph (pH)</td>
                             <td class="p-3">Якщо water_ph &gt; 7.8, встановити дозування pH- на "ACTIVE" в Redis з TTL 5 хв.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-white">25</td>
-                            <td class="p-3 font-semibold text-blue-400">Розумний пташник</td>
+                            <td class="p-3 font-mono text-zinc-500">25</td>
+                            <td class="p-3 font-semibold text-white">Розумний пташник</td>
                             <td class="p-3">air_temp (°C), co2_level (ppm), illuminance (Lux)</td>
                             <td class="p-3">Якщо air_temp &lt; 18, встановити обігрів "HEATER_ON" та записати лог у Scylla.</td>
                         </tr>
@@ -348,29 +635,29 @@
 
     <!-- TAB: REAL TELEMETRY & DATASETS -->
     <div id="tab-telemetry" class="tab-content space-y-6">
-        <div class="bg-brand-card border border-brand-border rounded-lg p-6">
+        <div class="card p-6">
             <h2 class="text-xl font-semibold text-white mb-2">Як виглядають реальні дані з IoT-датчиків у промисловості та Smart Home</h2>
-            <p class="text-sm text-zinc-300 leading-relaxed">
-                У реальних проектах датчики ніколи не відправляють просто число <code class="text-yellow-400">24.5</code>. Вони спілкуються за протоколом <strong>MQTT</strong> або <strong>HTTP</strong> і формують структуровані JSON-пакети, які містять апаратну адресу пристрою (<code class="text-blue-300">ieee_address</code> або <code class="text-blue-300">MAC</code>), діагностику радіоканалу (<code class="text-blue-300">linkquality</code> / <code class="text-blue-300">RSSI</code>), напругу живлення (<code class="text-blue-300">voltage_mv</code> / <code class="text-blue-300">battery</code>) та паспорт можливостей сенсора (<code class="text-green-400">exposes</code>). Нижче наведені три головні світові стандарти та відкриті датасети, на які слід орієнтуватися при генерації даних у вашому проєкті.
+            <p class="text-sm text-zinc-400 leading-relaxed">
+                У реальних проектах датчики ніколи не відправляють просто число <code>24.5</code>. Вони спілкуються за протоколом <strong class="text-white font-semibold">MQTT</strong> або <strong class="text-white font-semibold">HTTP</strong> і формують структуровані JSON-пакети, які містять апаратну адресу пристрою (<code>ieee_address</code> або <code>MAC</code>), діагностику радіоканалу (<code>linkquality</code> / <code>RSSI</code>), напругу живлення (<code>voltage_mv</code> / <code>battery</code>) та паспорт можливостей сенсора (<code>exposes</code>). Нижче наведені три головні світові стандарти та відкриті датасети, на які слід орієнтуватися при генерації даних у вашому проєкті.
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Standard 1: Zigbee2MQTT -->
-            <div class="bg-brand-card border border-brand-border rounded-lg p-5 space-y-3">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-base font-bold text-green-400">1. Стандарт Zigbee2MQTT (Xiaomi Aqara / Sonoff / Tuya)</h3>
-                    <span class="text-[10px] bg-green-500/10 text-green-300 px-2 py-0.5 rounded border border-green-500/20">MongoDB + Redis</span>
+            <div class="db-card db-card-mongo card card-hover p-5 space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                    <h3 class="text-[15px] font-semibold text-white">1. Стандарт Zigbee2MQTT <span class="text-zinc-500 font-normal">(Xiaomi Aqara / Sonoff / Tuya)</span></h3>
+                    <span class="db-badge db-badge-mongo">MongoDB + Redis</span>
                 </div>
-                <p class="text-xs text-zinc-300 leading-relaxed">
-                    Найпопулярніший відкритий стандарт для бездротових Zigbee-датчиків. Кожен пристрій публікує два типи JSON: <strong>паспорт пристрою (Exposes)</strong> — ідеально лягає в колекцію <code class="text-green-400">sensors</code> у <strong>MongoDB</strong>, та <strong>пакет телеметрії стану</strong> — ідеально лягає в <strong>Redis Hash</strong> та <strong>ScyllaDB</strong>.
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    Найпопулярніший відкритий стандарт для бездротових Zigbee-датчиків. Кожен пристрій публікує два типи JSON: <strong class="text-zinc-200 font-medium">паспорт пристрою (Exposes)</strong> — ідеально лягає в колекцію <code>sensors</code> у <strong class="text-zinc-200 font-medium">MongoDB</strong>, та <strong class="text-zinc-200 font-medium">пакет телеметрії стану</strong> — ідеально лягає в <strong class="text-zinc-200 font-medium">Redis Hash</strong> та <strong class="text-zinc-200 font-medium">ScyllaDB</strong>.
                 </p>
-                <div class="text-xs space-y-1">
-                    <div>🔗 <a href="https://www.zigbee2mqtt.io/guide/usage/mqtt_topics_and_messages.html" target="_blank" class="text-blue-400 hover:underline">Документація Zigbee2MQTT: Приклади JSON-повідомлень</a></div>
-                    <div>🔗 <a href="https://www.zigbee2mqtt.io/guide/usage/exposes.html" target="_blank" class="text-blue-400 hover:underline">Специфікація Exposes (Як описуються характеристики датчиків)</a></div>
-                    <div>🔗 <a href="https://www.zigbee2mqtt.io/supported-devices/" target="_blank" class="text-blue-400 hover:underline">Каталог 5800+ реальних датчиків із фото та їхніми JSON-полями</a></div>
-                </div>
-                <pre class="p-3 rounded text-[11px] font-mono text-zinc-300 overflow-x-auto">// 1. Паспорт пристрою (Зберігаємо в MongoDB db.sensors):
+                <ul class="text-xs space-y-1.5 list-none">
+                    <li><a href="https://www.zigbee2mqtt.io/guide/usage/mqtt_topics_and_messages.html" target="_blank" rel="noopener">Документація Zigbee2MQTT: Приклади JSON-повідомлень</a></li>
+                    <li><a href="https://www.zigbee2mqtt.io/guide/usage/exposes.html" target="_blank" rel="noopener">Специфікація Exposes (Як описуються характеристики датчиків)</a></li>
+                    <li><a href="https://www.zigbee2mqtt.io/supported-devices/" target="_blank" rel="noopener">Каталог 5800+ реальних датчиків із фото та їхніми JSON-полями</a></li>
+                </ul>
+                <pre class="p-3.5 text-[11px] font-mono overflow-x-auto">// 1. Паспорт пристрою (Зберігаємо в MongoDB db.sensors):
 {
   "ieee_address": "0x00158d00045b2c91",
   "friendly_name": "sensor_temp_livingroom",
@@ -397,19 +684,19 @@
             </div>
 
             <!-- Standard 2: Tasmota ESP32/ESP8266 -->
-            <div class="bg-brand-card border border-brand-border rounded-lg p-5 space-y-3">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-base font-bold text-amber-400">2. Стандарт Tasmota (ESP32 / Промислові контролери та реле)</h3>
-                    <span class="text-[10px] bg-amber-500/10 text-amber-300 px-2 py-0.5 rounded border border-amber-500/20">Вкладений JSON</span>
+            <div class="db-card db-card-scylla card card-hover p-5 space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                    <h3 class="text-[15px] font-semibold text-white">2. Стандарт Tasmota <span class="text-zinc-500 font-normal">(ESP32 / Промислові контролери та реле)</span></h3>
+                    <span class="db-badge db-badge-scylla">Вкладений JSON</span>
                 </div>
-                <p class="text-xs text-zinc-300 leading-relaxed">
-                    Прошивка <strong>Tasmota</strong> працює на мільйонах мікроконтролерів ESP8266/ESP32 та розумних розетках. Вона групує показання за назвою фізичного чіпа сенсора (<code class="text-amber-300">DS18B20</code>, <code class="text-amber-300">BME280</code>, <code class="text-amber-300">ENERGY</code>) у пакеті <code class="text-amber-300">StatusSNS</code>.
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    Прошивка <strong class="text-zinc-200 font-medium">Tasmota</strong> працює на мільйонах мікроконтролерів ESP8266/ESP32 та розумних розетках. Вона групує показання за назвою фізичного чіпа сенсора (<code>DS18B20</code>, <code>BME280</code>, <code>ENERGY</code>) у пакеті <code>StatusSNS</code>.
                 </p>
-                <div class="text-xs space-y-1">
-                    <div>🔗 <a href="https://tasmota.github.io/docs/JSON-Status-Responses/" target="_blank" class="text-blue-400 hover:underline">Офіційний довідник Tasmota: JSON Status Responses (StatusSNS)</a></div>
-                    <div>🔗 <a href="https://blog.mylocalbytes.com/kb/2022-01-10/lb-pm-power-monitoring" target="_blank" class="text-blue-400 hover:underline">Розбір пакету ENERGY (Потужність, Напруга, Струм, Коефіцієнт)</a></div>
-                </div>
-                <pre class="p-3 rounded text-[11px] font-mono text-zinc-300 overflow-x-auto">// Пакет tele/node_01/SENSOR від промислового вузла ESP32:
+                <ul class="text-xs space-y-1.5 list-none">
+                    <li><a href="https://tasmota.github.io/docs/JSON-Status-Responses/" target="_blank" rel="noopener">Офіційний довідник Tasmota: JSON Status Responses (StatusSNS)</a></li>
+                    <li><a href="https://blog.mylocalbytes.com/kb/2022-01-10/lb-pm-power-monitoring" target="_blank" rel="noopener">Розбір пакету ENERGY (Потужність, Напруга, Струм, Коефіцієнт)</a></li>
+                </ul>
+                <pre class="p-3.5 text-[11px] font-mono overflow-x-auto">// Пакет tele/node_01/SENSOR від промислового вузла ESP32:
 {
   "Time": "2026-11-06T21:57:38",
   "DS18B20": {
@@ -433,26 +720,26 @@
         </div>
 
         <!-- Real Datasets on Kaggle -->
-        <div class="bg-brand-card border border-brand-border rounded-lg p-6 space-y-4">
-            <h3 class="text-base font-bold text-blue-400">3. Реальні відкриті датасети на Kaggle (Зразки таблиць для ScyllaDB)</h3>
-            <p class="text-xs text-zinc-300 leading-relaxed">
+        <div class="card p-6 space-y-4">
+            <h3 class="text-[15px] font-semibold text-white">3. Реальні відкриті датасети на Kaggle <span class="text-zinc-500 font-normal">(Зразки таблиць для ScyllaDB)</span></h3>
+            <p class="text-xs text-zinc-400 leading-relaxed">
                 Ви можете подивитися реальні CSV/JSON записи з фізичних Raspberry Pi та промислових будівель або навіть завантажити частину CSV у свою ScyllaDB:
             </p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                <div class="bg-black/30 border border-zinc-800 rounded p-4 space-y-2">
-                    <div class="font-bold text-white">Environmental Sensor Telemetry (405k рядків)</div>
-                    <p class="text-zinc-400">Зібрано з 3-х фізичних Raspberry Pi по MQTT. Поля: <code>ts</code> (Unix epoch), <code>device_id</code> (MAC-адреса <code>1c:bf:ce:15:ec:4d</code>), <code>temp</code>, <code>humidity</code>, <code>co</code>, <code>lpg</code>, <code>smoke</code>, <code>light</code>, <code>motion</code>.</p>
-                    <a href="https://www.kaggle.com/datasets/garystafford/environmental-sensor-data-132k" target="_blank" class="inline-block text-blue-400 hover:underline font-medium">Відкрити на Kaggle &rarr;</a>
+                <div class="card-hover bg-surface-raised border border-line rounded-xl p-4 space-y-2">
+                    <div class="font-semibold text-white text-[13px]">Environmental Sensor Telemetry <span class="text-zinc-500 font-normal">(405k рядків)</span></div>
+                    <p class="text-zinc-400 leading-relaxed">Зібрано з 3-х фізичних Raspberry Pi по MQTT. Поля: <code>ts</code> (Unix epoch), <code>device_id</code> (MAC-адреса <code>1c:bf:ce:15:ec:4d</code>), <code>temp</code>, <code>humidity</code>, <code>co</code>, <code>lpg</code>, <code>smoke</code>, <code>light</code>, <code>motion</code>.</p>
+                    <a href="https://www.kaggle.com/datasets/garystafford/environmental-sensor-data-132k" target="_blank" rel="noopener" class="inline-block font-medium">Відкрити на Kaggle &rarr;</a>
                 </div>
-                <div class="bg-black/30 border border-zinc-800 rounded p-4 space-y-2">
-                    <div class="font-bold text-white">Smart Building Environmental IoT Dataset</div>
-                    <p class="text-zinc-400">Реальна телеметрія офісної будівлі по зонах. Поля: <code>Temperature</code>, <code>Humidity</code>, <code>CO2 (ppm)</code>, <code>PM2.5</code>, <code>Illuminance (Lux)</code>, <code>Sound_dB</code> та індекс комфорту.</p>
-                    <a href="https://www.kaggle.com/datasets/ziya07/environmental-design-iotml-dataset" target="_blank" class="inline-block text-blue-400 hover:underline font-medium">Відкрити на Kaggle &rarr;</a>
+                <div class="card-hover bg-surface-raised border border-line rounded-xl p-4 space-y-2">
+                    <div class="font-semibold text-white text-[13px]">Smart Building Environmental IoT Dataset</div>
+                    <p class="text-zinc-400 leading-relaxed">Реальна телеметрія офісної будівлі по зонах. Поля: <code>Temperature</code>, <code>Humidity</code>, <code>CO2 (ppm)</code>, <code>PM2.5</code>, <code>Illuminance (Lux)</code>, <code>Sound_dB</code> та індекс комфорту.</p>
+                    <a href="https://www.kaggle.com/datasets/ziya07/environmental-design-iotml-dataset" target="_blank" rel="noopener" class="inline-block font-medium">Відкрити на Kaggle &rarr;</a>
                 </div>
-                <div class="bg-black/30 border border-zinc-800 rounded p-4 space-y-2">
-                    <div class="font-bold text-white">IoT Indoor Air Quality (IAQ Telemetry)</div>
-                    <p class="text-zinc-400">Багатосенсорний датасет якості повітря в приміщеннях: <code>PM2.5</code>, <code>PM10</code>, <code>CO2</code>, <code>TVOC</code>, <code>CO</code>, <code>Temperature</code>, <code>Humidity</code>, <code>Light</code>.</p>
-                    <a href="https://www.kaggle.com/datasets/khajaahmed1/iot-indoor-air-quality" target="_blank" class="inline-block text-blue-400 hover:underline font-medium">Відкрити на Kaggle &rarr;</a>
+                <div class="card-hover bg-surface-raised border border-line rounded-xl p-4 space-y-2">
+                    <div class="font-semibold text-white text-[13px]">IoT Indoor Air Quality <span class="text-zinc-500 font-normal">(IAQ Telemetry)</span></div>
+                    <p class="text-zinc-400 leading-relaxed">Багатосенсорний датасет якості повітря в приміщеннях: <code>PM2.5</code>, <code>PM10</code>, <code>CO2</code>, <code>TVOC</code>, <code>CO</code>, <code>Temperature</code>, <code>Humidity</code>, <code>Light</code>.</p>
+                    <a href="https://www.kaggle.com/datasets/khajaahmed1/iot-indoor-air-quality" target="_blank" rel="noopener" class="inline-block font-medium">Відкрити на Kaggle &rarr;</a>
                 </div>
             </div>
         </div>
@@ -460,17 +747,15 @@
 
     <!-- TAB 3: DOCKER COMPOSE -->
     <div id="tab-compose" class="tab-content space-y-6">
-        <div class="bg-brand-card border border-brand-border rounded-lg p-6">
-            <div class="flex items-center justify-between mb-4">
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
                 <h2 class="text-xl font-semibold text-white">Оптимізований docker-compose.yml</h2>
-                <button onclick="copyCode()" class="bg-brand-accent hover:bg-blue-600 text-white text-xs px-3 py-1.5 rounded transition">
-                    Копіювати конфіг
-                </button>
+                <button onclick="copyCode(this)" class="btn btn-accent">Копіювати конфіг</button>
             </div>
-            <p class="text-xs text-brand-textMuted mb-4">
-                Увага: Конфігурація ScyllaDB спеціально обмежена за допомогою <code class="text-zinc-200">--developer-mode 1</code>, лімітом оперативної пам'яті (1 ГБ) та CPU (1 ядро). Це гарантує безперебійний запуск на звичайних студентських ноутбуках та Windows WSL без повного зависання системи.
+            <p class="text-xs text-zinc-400 mb-4 leading-relaxed">
+                Увага: Конфігурація ScyllaDB спеціально обмежена за допомогою <code>--developer-mode 1</code>, лімітом оперативної пам'яті (1 ГБ) та CPU (1 ядро). Це гарантує безперебійний запуск на звичайних студентських ноутбуках та Windows WSL без повного зависання системи.
             </p>
-            <pre class="p-4 rounded-md overflow-x-auto text-xs text-zinc-300 font-mono" id="compose-code">services:
+            <pre class="p-4 overflow-x-auto text-xs font-mono" id="compose-code">services:
   # 1. MongoDB - Реєстр сенсорів (гнучка схема) та правил автоматизації
   mongodb:
     image: mongo:9.0
@@ -523,59 +808,69 @@ volumes:
 
         <div class="space-y-5">
             <!-- MongoDB Requirements -->
-            <div class="bg-brand-card border-l-4 border-l-green-500 border border-brand-border rounded-lg p-5">
-                <h3 class="text-base font-bold text-green-400 mb-2">Вимога №1: MongoDB — Динамічний реєстр сенсорів та Керування порогом тригера з UI</h3>
-                <p class="text-xs text-zinc-300 leading-relaxed mb-3">
+            <div class="req req-mongo card p-6">
+                <div class="flex items-center gap-3 mb-2 flex-wrap">
+                    <span class="req-num-mongo text-[11px] font-mono font-semibold uppercase tracking-widest">Вимога №1</span>
+                    <span class="db-badge db-badge-mongo">MongoDB</span>
+                </div>
+                <h3 class="text-base font-semibold text-white mb-2">Динамічний реєстр сенсорів та керування порогом тригера з UI</h3>
+                <p class="text-xs text-zinc-400 leading-relaxed mb-3">
                     Чому саме MongoDB? Тому що датчики різних моделей мають різний набір паспортних характеристик (<em>Schema-less / Polymorphic Pattern</em>), і ними зручно керувати напряму з фронтенду у форматі JSON.
                 </p>
-                <ul class="list-disc pl-5 space-y-2 text-xs text-zinc-300">
+                <ul class="list-disc pl-5 space-y-2 text-xs text-zinc-300 leading-relaxed marker:text-mongo/50">
                     <li>
-                        <strong>Колекція <code class="text-green-300">sensors</code>:</strong> зберігає документи всіх датчиків об'єкта. Кожен документ обов'язково має вкладений об'єкт <code class="text-green-300">specs</code> із різною структурою для різних датчиків (наприклад: у датчика температури <code class="text-zinc-400">{"model": "DS18B20", "accuracy": "±0.5C", "zone": "Main"}</code>, а у датчика CO2 — <code class="text-zinc-400">{"calibration_date": "2026-01-10", "max_ppm": 5000, "interface": "I2C"}</code>).
+                        <strong class="text-white font-medium">Колекція <code>sensors</code>:</strong> зберігає документи всіх датчиків об'єкта. Кожен документ обов'язково має вкладений об'єкт <code>specs</code> із різною структурою для різних датчиків (наприклад: у датчика температури <code>{"model": "DS18B20", "accuracy": "±0.5C", "zone": "Main"}</code>, а у датчика CO2 — <code>{"calibration_date": "2026-01-10", "max_ppm": 5000, "interface": "I2C"}</code>).
                     </li>
                     <li>
-                        <strong>Додавання та видалення сенсора через фронтенд (<code class="text-green-300">POST /api/sensors</code>, <code class="text-green-300">DELETE /api/sensors/{code}</code>):</strong> на веб-сторінці має бути форма «Додати новий сенсор у MongoDB» (назва, код метрики, одиниця виміру, локація/модель). Щойно студент натискає «Додати» — документ зберігається в колекцію <code class="text-green-300">sensors</code> і <strong>миттєво з'являється у списку обладнання на фронтенді</strong>.
+                        <strong class="text-white font-medium">Додавання та видалення сенсора через фронтенд (<code>POST /api/sensors</code>, <code>DELETE /api/sensors/{code}</code>):</strong> на веб-сторінці має бути форма «Додати новий сенсор у MongoDB» (назва, код метрики, одиниця виміру, локація/модель). Щойно студент натискає «Додати» — документ зберігається в колекцію <code>sensors</code> і <strong class="text-white font-medium">миттєво з'являється у списку обладнання на фронтенді</strong>.
                     </li>
                     <li>
-                        <strong>Редагування правила автоматизації з фронтенду (<code class="text-green-300">PUT /api/rules</code>):</strong> у колекції <code class="text-green-300">rules</code> зберігається документ активного тригера варіанта (наприклад, <code class="text-zinc-400">{"metric": "temp", "operator": ">", "threshold": 26.0, "action_state": "COOLING"}</code>). Студент має змогу прямо на сайті змінити число <code class="text-green-300">threshold</code> — воно оновлюється в MongoDB через <code class="text-green-300">$set</code>, і бекенд одразу перераховує стан реле!
+                        <strong class="text-white font-medium">Редагування правила автоматизації з фронтенду (<code>PUT /api/rules</code>):</strong> у колекції <code>rules</code> зберігається документ активного тригера варіанта (наприклад, <code>{"metric": "temp", "operator": ">", "threshold": 26.0, "action_state": "COOLING"}</code>). Студент має змогу прямо на сайті змінити число <code>threshold</code> — воно оновлюється в MongoDB через <code>$set</code>, і бекенд одразу перераховує стан реле!
                     </li>
                 </ul>
             </div>
 
             <!-- Redis Requirements -->
-            <div class="bg-brand-card border-l-4 border-l-red-500 border border-brand-border rounded-lg p-5">
-                <h3 class="text-base font-bold text-red-400 mb-2">Вимога №2: Redis — Миттєві прапорці стану (Hash) та Кеш Агрегаційного Дашборду (SETEX)</h3>
-                <ul class="list-disc pl-5 space-y-2 text-xs text-zinc-300">
+            <div class="req req-redis card p-6">
+                <div class="flex items-center gap-3 mb-2 flex-wrap">
+                    <span class="req-num-redis text-[11px] font-mono font-semibold uppercase tracking-widest">Вимога №2</span>
+                    <span class="db-badge db-badge-redis">Redis</span>
+                </div>
+                <h3 class="text-base font-semibold text-white mb-2">Миттєві прапорці стану (Hash) та кеш агрегаційного дашборду (SETEX)</h3>
+                <ul class="list-disc pl-5 space-y-2 text-xs text-zinc-300 leading-relaxed marker:text-redis/50">
                     <li>
-                        <strong>Швидкий стан об'єкта (<code class="text-red-300">Hash device:state</code>):</strong> зберігає останні відомі показники всіх сенсорів та поточний прапорець стану виконавчого пристрою (<code class="text-red-300">actuator_status</code> — наприклад, <code class="text-zinc-400">NORMAL</code> або <code class="text-zinc-400">COOLING / EMERGENCY_SHUTDOWN</code>). Коли студент змінює поріг у MongoDB або приходить новий вимір, статус у Redis миттєво оновлюється.
+                        <strong class="text-white font-medium">Швидкий стан об'єкта (<code>Hash device:state</code>):</strong> зберігає останні відомі показники всіх сенсорів та поточний прапорець стану виконавчого пристрою (<code>actuator_status</code> — наприклад, <code>NORMAL</code> або <code>COOLING / EMERGENCY_SHUTDOWN</code>). Коли студент змінює поріг у MongoDB або приходить новий вимір, статус у Redis миттєво оновлюється.
                     </li>
                     <li>
-                        <strong>Кешування агрегованих графіків (<code class="text-red-300">String cache:dashboard:analytics</code> з TTL 60 сек):</strong> реалізує патерн <strong>Cache-Aside</strong>. Розраховані зі ScyllaDB точки двох графіків зберігаються у Redis на 60 секунд. На UI обов'язково виводиться бейдж статусу кешу (<strong>REDIS_CACHE_HIT</strong> із таймером TTL або <strong>SCYLLADB_AGGREGATED_MISS</strong>) та кнопка «Скинути кеш Redis».
+                        <strong class="text-white font-medium">Кешування агрегованих графіків (<code>String cache:dashboard:analytics</code> з TTL 60 сек):</strong> реалізує патерн <strong class="text-white font-medium">Cache-Aside</strong>. Розраховані зі ScyllaDB точки двох графіків зберігаються у Redis на 60 секунд. На UI обов'язково виводиться бейдж статусу кешу (<strong class="text-white font-medium">REDIS_CACHE_HIT</strong> із таймером TTL або <strong class="text-white font-medium">SCYLLADB_AGGREGATED_MISS</strong>) та кнопка «Скинути кеш Redis».
                     </li>
                 </ul>
             </div>
 
             <!-- ScyllaDB Requirements -->
-            <div class="bg-brand-card border-l-4 border-l-blue-500 border border-brand-border rounded-lg p-5">
-                <h3 class="text-base font-bold text-blue-400 mb-2">Вимога №3: ScyllaDB — Сирі часові ряди та Два Агрегаційні Графіки на Дашборді</h3>
-                <ul class="list-disc pl-5 space-y-2 text-xs text-zinc-300">
+            <div class="req req-scylla card p-6">
+                <div class="flex items-center gap-3 mb-2 flex-wrap">
+                    <span class="req-num-scylla text-[11px] font-mono font-semibold uppercase tracking-widest">Вимога №3</span>
+                    <span class="db-badge db-badge-scylla">ScyllaDB</span>
+                </div>
+                <h3 class="text-base font-semibold text-white mb-2">Сирі часові ряди та два агрегаційні графіки на дашборді</h3>
+                <ul class="list-disc pl-5 space-y-2 text-xs text-zinc-300 leading-relaxed marker:text-scylla/50">
                     <li>
-                        <strong>Таблиця часових рядів у ScyllaDB:</strong>
-                        <div class="bg-black/40 p-2.5 rounded font-mono text-[11px] text-blue-300 mt-1">
-                            CREATE KEYSPACE IF NOT EXISTS smart_monitoring WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};<br>
-                            CREATE TABLE IF NOT EXISTS smart_monitoring.sensor_history (<br>
-                            &nbsp;&nbsp;object_id text, ts timestamp, val1 double, val2 double, val3 double, alert_triggered int,<br>
-                            &nbsp;&nbsp;PRIMARY KEY (object_id, ts)<br>
-                            ) WITH CLUSTERING ORDER BY (ts DESC);
-                        </div>
+                        <strong class="text-white font-medium">Таблиця часових рядів у ScyllaDB:</strong>
+                        <pre class="p-3.5 text-[11px] font-mono overflow-x-auto mt-2">CREATE KEYSPACE IF NOT EXISTS smart_monitoring WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+CREATE TABLE IF NOT EXISTS smart_monitoring.sensor_history (
+  object_id text, ts timestamp, val1 double, val2 double, val3 double, alert_triggered int,
+  PRIMARY KEY (object_id, ts)
+) WITH CLUSTERING ORDER BY (ts DESC);</pre>
                     </li>
                     <li>
-                        <strong>Генерація щонайменше 720 історичних записів (за 12 годин):</strong> скрипт наповнює ScyllaDB похвилинними даними за останні 12 годин із реалістичними коливаннями та періодичними перевищеннями порогу (<code class="text-blue-300">alert_triggered = 1</code>).
+                        <strong class="text-white font-medium">Генерація щонайменше 720 історичних записів (за 12 годин):</strong> скрипт наповнює ScyllaDB похвилинними даними за останні 12 годин із реалістичними коливаннями та періодичними перевищеннями порогу (<code>alert_triggered = 1</code>).
                     </li>
                     <li>
-                        <strong>Два обов'язкові агрегаційні графіки (Chart.js):</strong>
-                        <ol class="list-decimal pl-5 mt-1 space-y-1 text-zinc-300">
-                            <li><strong>Графік №1 (Multi-Line Chart):</strong> погодинний коридор значень головної метрики — 3 лінії на одному графіку (<strong>Min</strong>, <strong>Avg</strong>, <strong>Max</strong> за кожну годину).</li>
-                            <li><strong>Графік №2 (Bar Chart):</strong> погодинна гістограма кількості спрацювань тригера автоматизації (<strong>SUM(alert_triggered)</strong> за кожну годину).</li>
+                        <strong class="text-white font-medium">Два обов'язкові агрегаційні графіки (Chart.js):</strong>
+                        <ol class="list-decimal pl-5 mt-1.5 space-y-1.5 text-zinc-300">
+                            <li><strong class="text-white font-medium">Графік №1 (Multi-Line Chart):</strong> погодинний коридор значень головної метрики — 3 лінії на одному графіку (<strong class="text-white font-medium">Min</strong>, <strong class="text-white font-medium">Avg</strong>, <strong class="text-white font-medium">Max</strong> за кожну годину).</li>
+                            <li><strong class="text-white font-medium">Графік №2 (Bar Chart):</strong> погодинна гістограма кількості спрацювань тригера автоматизації (<strong class="text-white font-medium">SUM(alert_triggered)</strong> за кожну годину).</li>
                         </ol>
                     </li>
                 </ul>
@@ -585,18 +880,20 @@ volumes:
 
     <!-- TAB 5: AI PROMPTS -->
     <div id="tab-ai-prompts" class="tab-content space-y-6">
-        <h2 class="text-xl font-semibold text-white">Промпти для генерації коду через безкоштовні AI інструменти</h2>
-        <p class="text-sm text-brand-textMuted">
-            Скопіюйте ці промпти, підставте дані свого індивідуального варіанта та відправте в Gemini, Kimi або будь-який інший AI-інструмент. Список безкоштовних варіантів і порядок перемикання між ними описані у вкладці «Безкоштовні AI-інструменти».
-        </p>
+        <div>
+            <h2 class="text-xl font-semibold text-white">Промпти для генерації коду через безкоштовні AI інструменти</h2>
+            <p class="text-sm text-zinc-400 mt-2 leading-relaxed">
+                Скопіюйте ці промпти, підставте дані свого індивідуального варіанта та відправте в Gemini, Kimi або будь-який інший AI-інструмент. Список безкоштовних варіантів і порядок перемикання між ними описані у вкладці <button class="text-indigo-300 hover:text-indigo-200 underline underline-offset-2 decoration-indigo-500/40" onclick="switchTab('free-ai')">«07 AI-інструменти»</button>.
+            </p>
+        </div>
 
         <!-- Prompt 1 -->
-        <div class="bg-brand-card border border-brand-border rounded-lg p-5">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-blue-400">Промпт №1: Ініціалізація баз + Backend API (MongoDB CRUD + Redis Cache + ScyllaDB Aggregation)</h3>
-                <button onclick="copyPrompt('prompt-1')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] px-2 py-1 rounded">Копіювати</button>
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
+                <h3 class="text-xs font-semibold uppercase tracking-wider font-mono text-zinc-400">Промпт №1 · Ініціалізація баз + Backend API <span class="text-zinc-600 normal-case">(MongoDB CRUD + Redis Cache + ScyllaDB Aggregation)</span></h3>
+                <button onclick="copyPrompt('prompt-1', this)" class="btn">Копіювати</button>
             </div>
-            <pre class="p-3 bg-black/40 rounded text-[11px] font-mono whitespace-pre-wrap text-zinc-300 border border-zinc-800" id="prompt-1">Я розробляю локальний навчальний проєкт на Python (FastAPI) з трьома NoSQL базами даних:
+            <pre class="p-4 text-[11px] font-mono whitespace-pre-wrap" id="prompt-1">Я розробляю локальний навчальний проєкт на Python (FastAPI) з трьома NoSQL базами даних:
 1. MongoDB (`mongodb://localhost:27017`, база `app_db`)
 2. Redis (`localhost:6379`, decode_responses=True)
 3. ScyllaDB (`localhost:9042`, keyspace `smart_monitoring`)
@@ -631,12 +928,12 @@ volumes:
         </div>
 
         <!-- Prompt 2 -->
-        <div class="bg-brand-card border border-brand-border rounded-lg p-5">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-blue-400">Промпт №2: Фронтенд Дашборд із формами MongoDB, статусами Redis та графіками ScyllaDB (index.html)</h3>
-                <button onclick="copyPrompt('prompt-2')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] px-2 py-1 rounded">Копіювати</button>
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
+                <h3 class="text-xs font-semibold uppercase tracking-wider font-mono text-zinc-400">Промпт №2 · Фронтенд Дашборд <span class="text-zinc-600 normal-case">із формами MongoDB, статусами Redis та графіками ScyllaDB (index.html)</span></h3>
+                <button onclick="copyPrompt('prompt-2', this)" class="btn">Копіювати</button>
             </div>
-            <pre class="p-3 bg-black/40 rounded text-[11px] font-mono whitespace-pre-wrap text-zinc-300 border border-zinc-800" id="prompt-2">Напиши один файл `index.html` (Tailwind CSS CDN + Chart.js CDN) у темній темі для мого локального FastAPI бекенду (`http://localhost:8000`). Інтерфейс має наочно показувати роботу кожної з трьох баз даних у трьох чітко підписаних секціях:
+            <pre class="p-4 text-[11px] font-mono whitespace-pre-wrap" id="prompt-2">Напиши один файл `index.html` (Tailwind CSS CDN + Chart.js CDN) у темній темі для мого локального FastAPI бекенду (`http://localhost:8000`). Інтерфейс має наочно показувати роботу кожної з трьох баз даних у трьох чітко підписаних секціях:
 
 Секція 1: "Реєстр сенсорів та Правила автоматизації (MongoDB)"
 - Відображає картки всіх зареєстрованих сенсорів із колекції `sensors` разом із їхніми вкладеними JSON-характеристиками `specs` та кнопкою видалення.
@@ -655,87 +952,89 @@ volumes:
 
     <!-- TAB: FREE AI TOOLS -->
     <div id="tab-free-ai" class="tab-content space-y-5">
-        <div class="flex items-baseline justify-between gap-3">
+        <div class="flex items-baseline justify-between gap-3 flex-wrap">
             <h2 class="text-xl font-semibold text-white">Безкоштовні AI-інструменти для vibe coding</h2>
-            <span class="text-[11px] text-brand-textMuted whitespace-nowrap">Перевірено 6.11.2026</span>
+            <span class="text-[11px] text-zinc-500 whitespace-nowrap font-mono">Перевірено 6.11.2026</span>
         </div>
 
         <p class="text-sm text-zinc-300 leading-relaxed">
-            <strong class="text-white">Одного інструмента на весь проєкт не вистачить:</strong> агент, який сам читає і править файли, швидко витрачає безкоштовну квоту. Працюйте кількома по черзі. Чим більше різних інструментів ви спробуєте, тим краще: так ви порівняєте їхню швидкість і якість на власному проєкті.
+            <strong class="text-white font-semibold">Одного інструмента на весь проєкт не вистачить:</strong> агент, який сам читає і править файли, швидко витрачає безкоштовну квоту. Працюйте кількома по черзі. Чим більше різних інструментів ви спробуєте, тим краще: так ви порівняєте їхню швидкість і якість на власному проєкті.
         </p>
 
-        <div class="bg-brand-card border border-brand-border rounded-lg overflow-hidden">
-            <table class="w-full text-left text-xs text-zinc-300">
-                <thead class="bg-zinc-800/50 uppercase tracking-wider text-white border-b border-brand-border">
-                    <tr>
-                        <th class="p-3 w-8">№</th>
-                        <th class="p-3">Інструмент</th>
-                        <th class="p-3">Що безкоштовно</th>
-                        <th class="p-3">Обмеження</th>
-                        <th class="p-3">Як почати</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-800">
-                    <tr class="bg-blue-500/5">
-                        <td class="p-3 font-mono text-blue-400">1</td>
-                        <td class="p-3"><a class="text-blue-400 hover:underline font-semibold" href="https://antigravity.google/" target="_blank" rel="noopener">Google Antigravity</a><br><span class="text-[11px] text-brand-textMuted">IDE та CLI</span></td>
-                        <td class="p-3">Gemini 3.8 Flash. Tab-підказки та Command-запити без ліміту, агентні задачі з тижневою квотою, розмір якої Google не публікує.</td>
-                        <td class="p-3">Квота оновлюється раз на тиждень, невикористане не переноситься. Claude 4.6 та GPT-OSS-120b зникнуть з безкоштовного плану 18.11.2026. Gemini CLI для безкоштовних акаунтів більше не працює.</td>
-                        <td class="p-3"><a class="text-blue-400 hover:underline" href="https://antigravity.google/docs/plans/" target="_blank" rel="noopener">Ліміти</a></td>
-                    </tr>
-                    <tr class="bg-blue-500/5">
-                        <td class="p-3 font-mono text-blue-400">2</td>
-                        <td class="p-3"><a class="text-blue-400 hover:underline font-semibold" href="https://opencode.ai/" target="_blank" rel="noopener">OpenCode</a><br><span class="text-[11px] text-brand-textMuted">Термінал, десктоп</span></td>
-                        <td class="p-3">Працює з коробки: агент і моделі Zen (DeepSeek Flash, GLM Flash). Реєстрація та ключі не потрібні. Найшвидший з безкоштовних.</td>
-                        <td class="p-3">Набір моделей змінюється, ліміт не публікується. Безкоштовні моделі працюють лише всередині OpenCode.</td>
-                        <td class="p-3"><code class="text-yellow-400">npm install -g @opencode/cli</code><br><span class="text-[11px] text-brand-textMuted">далі <code class="text-zinc-300">opencode</code>, модель через <code class="text-zinc-300">/models</code></span></td>
-                    </tr>
-                    <tr class="bg-blue-500/5">
-                        <td class="p-3 font-mono text-blue-400">3</td>
-                        <td class="p-3"><a class="text-blue-400 hover:underline font-semibold" href="https://kilo.ai/install" target="_blank" rel="noopener">Kilo Code</a><br><span class="text-[11px] text-brand-textMuted">VS Code, JetBrains, CLI</span></td>
-                        <td class="p-3">Працює з коробки. Режим Auto Free (<code class="text-zinc-200">kilo-auto/free</code>) сам обирає безкоштовну модель. Зручний, якщо працюєте в редакторі.</td>
-                        <td class="p-3">Помітно повільніший за OpenCode. Близько 200 запитів на годину з однієї IP-адреси, набір моделей змінюється.</td>
-                        <td class="p-3"><code class="text-yellow-400">npm install -g @kilocode/cli</code><br><span class="text-[11px] text-brand-textMuted">або у VS Code: Extensions, «Kilo Code», Install Pre-Release Version</span></td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-mono text-zinc-500">4</td>
-                        <td class="p-3"><a class="text-blue-400 hover:underline font-semibold" href="https://console.groq.com/" target="_blank" rel="noopener">Groq + Codex CLI</a><br><span class="text-[11px] text-brand-textMuted">API-ключ і агент у терміналі</span></td>
-                        <td class="p-3">gpt-oss-120b, gpt-oss-20b, Qwen 3.8 27B: до 1000 запитів і 200 тисяч токенів на день на модель. Без картки. Найщедріший опублікований ліміт.</td>
-                        <td class="p-3">Власного CLI немає. 8 тисяч токенів на хвилину, тому агент швидко впирається в rate limit. Давайте невеликі задачі.</td>
-                        <td class="p-3"><a class="text-blue-400 hover:underline" href="https://console.groq.com/keys" target="_blank" rel="noopener">Ключ</a>, налаштування нижче</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-mono text-zinc-500">5</td>
-                        <td class="p-3"><span class="font-semibold text-white">Веб-чати</span><br><span class="text-[11px] text-brand-textMuted"><a class="text-blue-400 hover:underline" href="https://www.kimi.com/" target="_blank" rel="noopener">Kimi</a>, <a class="text-blue-400 hover:underline" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a>, <a class="text-blue-400 hover:underline" href="https://aistudio.google.com/" target="_blank" rel="noopener">Gemini</a></span></td>
-                        <td class="p-3">Чат витрачає значно менше токенів, ніж агент, який перечитує проєкт на кожному кроці, і ліміти в чатах зазвичай більші. Добре для одного файлу або питання.</td>
-                        <td class="p-3">Код треба копіювати в проєкт вручну. У Kimi безкоштовний лише веб, Kimi Code CLI платний (від плану Plus). У ChatGPT так само: безкоштовний лише чат, Codex CLI платний. У цьому завданні Codex CLI використовується безкоштовно через ключ Groq.</td>
-                        <td class="p-3"><code class="text-zinc-300">index.html</code>, CQL-схема, пояснення помилки</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-mono text-zinc-500">6</td>
-                        <td class="p-3"><span class="font-semibold text-white">Запасні</span><br><span class="text-[11px] text-brand-textMuted"><a class="text-blue-400 hover:underline" href="https://cline.bot/" target="_blank" rel="noopener">Cline</a>, <a class="text-blue-400 hover:underline" href="https://github.com/features/copilot" target="_blank" rel="noopener">Copilot Free</a>, <a class="text-blue-400 hover:underline" href="https://openrouter.ai/" target="_blank" rel="noopener">OpenRouter</a>, <a class="text-blue-400 hover:underline" href="https://ollama.com/" target="_blank" rel="noopener">Ollama</a></span></td>
-                        <td class="p-3">Cline працює з вашим ключем. Copilot Free дає 2000 підказок на місяць, студентам більше через <a class="text-blue-400 hover:underline" href="https://education.github.com/pack" target="_blank" rel="noopener">Student Developer Pack</a>. OpenRouter: моделі :free, 50 запитів на день. Ollama: локальні моделі без квот.</td>
-                        <td class="p-3">OpenRouter: 1000 запитів на день після одноразового поповнення на $10. Ollama потребує потужного ноутбука, разом із ScyllaDB у Docker пам'яті вистачить не всім.</td>
-                        <td class="p-3">Коли перші п'ять вже впираються в ліміт</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="card overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-zinc-300">
+                    <thead class="bg-surface-raised uppercase tracking-wider text-[11px] text-zinc-400 border-b border-line">
+                        <tr>
+                            <th class="p-3 w-8 font-semibold">№</th>
+                            <th class="p-3 font-semibold">Інструмент</th>
+                            <th class="p-3 font-semibold">Що безкоштовно</th>
+                            <th class="p-3 font-semibold">Обмеження</th>
+                            <th class="p-3 font-semibold">Як почати</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-line/60">
+                        <tr class="bg-indigo-500/[0.04]">
+                            <td class="p-3 font-mono text-indigo-300">1</td>
+                            <td class="p-3"><a class="font-semibold" href="https://antigravity.google/" target="_blank" rel="noopener">Google Antigravity</a><br><span class="text-[11px] text-zinc-500">IDE та CLI</span></td>
+                            <td class="p-3">Gemini 3.8 Flash. Tab-підказки та Command-запити без ліміту, агентні задачі з тижневою квотою, розмір якої Google не публікує.</td>
+                            <td class="p-3">Квота оновлюється раз на тиждень, невикористане не переноситься. Claude 4.6 та GPT-OSS-120b зникнуть з безкоштовного плану 18.11.2026. Gemini CLI для безкоштовних акаунтів більше не працює.</td>
+                            <td class="p-3"><a href="https://antigravity.google/docs/plans/" target="_blank" rel="noopener">Ліміти</a></td>
+                        </tr>
+                        <tr class="bg-indigo-500/[0.04]">
+                            <td class="p-3 font-mono text-indigo-300">2</td>
+                            <td class="p-3"><a class="font-semibold" href="https://opencode.ai/" target="_blank" rel="noopener">OpenCode</a><br><span class="text-[11px] text-zinc-500">Термінал, десктоп</span></td>
+                            <td class="p-3">Працює з коробки: агент і моделі Zen (DeepSeek Flash, GLM Flash). Реєстрація та ключі не потрібні. Найшвидший з безкоштовних.</td>
+                            <td class="p-3">Набір моделей змінюється, ліміт не публікується. Безкоштовні моделі працюють лише всередині OpenCode.</td>
+                            <td class="p-3"><code>npm install -g @opencode/cli</code><br><span class="text-[11px] text-zinc-500">далі <code>opencode</code>, модель через <code>/models</code></span></td>
+                        </tr>
+                        <tr class="bg-indigo-500/[0.04]">
+                            <td class="p-3 font-mono text-indigo-300">3</td>
+                            <td class="p-3"><a class="font-semibold" href="https://kilo.ai/install" target="_blank" rel="noopener">Kilo Code</a><br><span class="text-[11px] text-zinc-500">VS Code, JetBrains, CLI</span></td>
+                            <td class="p-3">Працює з коробки. Режим Auto Free (<code>kilo-auto/free</code>) сам обирає безкоштовну модель. Зручний, якщо працюєте в редакторі.</td>
+                            <td class="p-3">Помітно повільніший за OpenCode. Близько 200 запитів на годину з однієї IP-адреси, набір моделей змінюється.</td>
+                            <td class="p-3"><code>npm install -g @kilocode/cli</code><br><span class="text-[11px] text-zinc-500">або у VS Code: Extensions, «Kilo Code», Install Pre-Release Version</span></td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-mono text-zinc-500">4</td>
+                            <td class="p-3"><a class="font-semibold" href="https://console.groq.com/" target="_blank" rel="noopener">Groq + Codex CLI</a><br><span class="text-[11px] text-zinc-500">API-ключ і агент у терміналі</span></td>
+                            <td class="p-3">gpt-oss-120b, gpt-oss-20b, Qwen 3.8 27B: до 1000 запитів і 200 тисяч токенів на день на модель. Без картки. Найщедріший опублікований ліміт.</td>
+                            <td class="p-3">Власного CLI немає. 8 тисяч токенів на хвилину, тому агент швидко впирається в rate limit. Давайте невеликі задачі.</td>
+                            <td class="p-3"><a href="https://console.groq.com/keys" target="_blank" rel="noopener">Ключ</a>, налаштування нижче</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-mono text-zinc-500">5</td>
+                            <td class="p-3"><span class="font-semibold text-white">Веб-чати</span><br><span class="text-[11px] text-zinc-500"><a href="https://www.kimi.com/" target="_blank" rel="noopener">Kimi</a>, <a href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a>, <a href="https://aistudio.google.com/" target="_blank" rel="noopener">Gemini</a></span></td>
+                            <td class="p-3">Чат витрачає значно менше токенів, ніж агент, який перечитує проєкт на кожному кроці, і ліміти в чатах зазвичай більші. Добре для одного файлу або питання.</td>
+                            <td class="p-3">Код треба копіювати в проєкт вручну. У Kimi безкоштовний лише веб, Kimi Code CLI платний (від плану Plus). У ChatGPT так само: безкоштовний лише чат, Codex CLI платний. У цьому завданні Codex CLI використовується безкоштовно через ключ Groq.</td>
+                            <td class="p-3"><code>index.html</code>, CQL-схема, пояснення помилки</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-mono text-zinc-500">6</td>
+                            <td class="p-3"><span class="font-semibold text-white">Запасні</span><br><span class="text-[11px] text-zinc-500"><a href="https://cline.bot/" target="_blank" rel="noopener">Cline</a>, <a href="https://github.com/features/copilot" target="_blank" rel="noopener">Copilot Free</a>, <a href="https://openrouter.ai/" target="_blank" rel="noopener">OpenRouter</a>, <a href="https://ollama.com/" target="_blank" rel="noopener">Ollama</a></span></td>
+                            <td class="p-3">Cline працює з вашим ключем. Copilot Free дає 2000 підказок на місяць, студентам більше через <a href="https://education.github.com/pack" target="_blank" rel="noopener">Student Developer Pack</a>. OpenRouter: моделі :free, 50 запитів на день. Ollama: локальні моделі без квот.</td>
+                            <td class="p-3">OpenRouter: 1000 запитів на день після одноразового поповнення на $10. Ollama потребує потужного ноутбука, разом із ScyllaDB у Docker пам'яті вистачить не всім.</td>
+                            <td class="p-3">Коли перші п'ять вже впираються в ліміт</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <p class="text-xs text-brand-textMuted">Перші три рядки виділені: з них варто починати. Номер у таблиці збігається з рекомендованим порядком роботи.</p>
+        <p class="text-xs text-zinc-500">Перші три рядки виділені: з них варто починати. Номер у таблиці збігається з рекомендованим порядком роботи.</p>
 
-        <details class="bg-brand-card border border-brand-border rounded-lg">
-            <summary class="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-white">Налаштування Codex CLI з Groq</summary>
-            <div class="px-4 pb-4 space-y-3 border-t border-brand-border pt-3">
-                <p class="text-xs text-zinc-300 leading-relaxed">
-                    API Groq сумісний з OpenAI Responses API, тому до нього підключається відкритий <a class="text-blue-400 hover:underline" href="https://github.com/openai/codex" target="_blank" rel="noopener">Codex CLI</a>. Для коду Groq радить модель <code class="text-yellow-400">openai/gpt-oss-120b</code>.
+        <details class="card">
+            <summary class="cursor-pointer px-5 py-4 text-sm font-semibold text-white rounded-t-[14px]">Налаштування Codex CLI з Groq</summary>
+            <div class="px-5 pb-5 space-y-3 pt-4">
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    API Groq сумісний з OpenAI Responses API, тому до нього підключається відкритий <a href="https://github.com/openai/codex" target="_blank" rel="noopener">Codex CLI</a>. Для коду Groq радить модель <code>openai/gpt-oss-120b</code>.
                 </p>
-                <ol class="text-xs text-zinc-300 leading-relaxed list-decimal pl-5 space-y-1">
-                    <li><code class="text-yellow-400">npm install -g @openai/codex</code></li>
-                    <li><code class="text-yellow-400">export GROQ_API_KEY=ваш_ключ</code> (Windows PowerShell: <code class="text-yellow-400">$env:GROQ_API_KEY="ваш_ключ"</code>)</li>
-                    <li>Додайте у <code class="text-yellow-400">~/.codex/config.toml</code>:</li>
+                <ol class="text-xs text-zinc-300 leading-relaxed list-decimal pl-5 space-y-1.5">
+                    <li><code>npm install -g @openai/codex</code></li>
+                    <li><code>export GROQ_API_KEY=ваш_ключ</code> (Windows PowerShell: <code>$env:GROQ_API_KEY="ваш_ключ"</code>)</li>
+                    <li>Додайте у <code>~/.codex/config.toml</code>:</li>
                 </ol>
                 <div class="relative">
-                    <pre class="p-3 rounded text-[11px] font-mono text-zinc-300 overflow-x-auto" id="codex-groq-config">model = "openai/gpt-oss-120b"
+                    <pre class="p-3.5 text-[11px] font-mono overflow-x-auto" id="codex-groq-config">model = "openai/gpt-oss-120b"
 model_provider = "groq"
 
 [model_providers.groq]
@@ -743,24 +1042,24 @@ name = "Groq"
 base_url = "https://api.groq.com/openai/v1"
 env_key = "GROQ_API_KEY"
 wire_api = "responses"</pre>
-                    <button onclick="copyPrompt('codex-groq-config')" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] px-2 py-1 rounded">Копіювати</button>
+                    <button onclick="copyPrompt('codex-groq-config', this)" class="btn absolute top-2 right-2">Копіювати</button>
                 </div>
-                <p class="text-xs text-zinc-400">Запуск: <code class="text-zinc-300">codex</code> у папці проєкту. Формат конфігу може змінюватись між версіями, звіряйтесь з <a class="text-blue-400 hover:underline" href="https://console.groq.com/docs/responses-api" target="_blank" rel="noopener">документацією Groq</a>.</p>
+                <p class="text-xs text-zinc-400">Запуск: <code>codex</code> у папці проєкту. Формат конфігу може змінюватись між версіями, звіряйтесь з <a href="https://console.groq.com/docs/responses-api" target="_blank" rel="noopener">документацією Groq</a>.</p>
             </div>
         </details>
 
-        <div>
-            <h3 class="text-sm font-semibold text-white mb-2">Як перемикатись між інструментами</h3>
-            <ul class="text-xs text-zinc-300 leading-relaxed space-y-1.5">
-                <li>Тримайте в корені <code class="text-yellow-400">PROJECT_CONTEXT.md</code>: номер варіанта, сенсори, тригер, структура папок, що вже працює, що далі, відомі помилки. Новий інструмент прочитає його і не проситиме пояснювати все з нуля.</li>
+        <div class="card p-6">
+            <h3 class="text-sm font-semibold text-white mb-3">Як перемикатись між інструментами</h3>
+            <ul class="text-xs text-zinc-300 leading-relaxed space-y-2 list-disc pl-5 marker:text-indigo-400/60">
+                <li>Тримайте в корені <code>PROJECT_CONTEXT.md</code>: номер варіанта, сенсори, тригер, структура папок, що вже працює, що далі, відомі помилки. Новий інструмент прочитає його і не проситиме пояснювати все з нуля.</li>
                 <li>Комітьте після кожного робочого кроку. Інакше наступний інструмент витратить квоту на розбір недописаного коду.</li>
                 <li>Економте токени: одна невелика задача за раз, лише потрібний файл і текст помилки, логи Docker обрізайте до останніх 30-50 рядків, нова розмова на кожну задачу.</li>
                 <li>Квоти оновлюються раз на добу, тиждень або місяць, тому не залишайте роботу на останній вечір. Якщо закінчилось усе, дописуйте вручну: на захисті питатимуть про бази даних, а не про вибір AI.</li>
             </ul>
         </div>
 
-        <p class="text-xs text-brand-textMuted leading-relaxed">
-            Ліміти безкоштовних планів змінюються часто, переважно в бік зменшення. Актуальний зведений список з датами перевірки: <a class="text-blue-400 hover:underline" href="https://mvalentsev.github.io/awesome-free-ai-coding/" target="_blank" rel="noopener">awesome-free-ai-coding</a>.
+        <p class="text-xs text-zinc-500 leading-relaxed">
+            Ліміти безкоштовних планів змінюються часто, переважно в бік зменшення. Актуальний зведений список з датами перевірки: <a href="https://mvalentsev.github.io/awesome-free-ai-coding/" target="_blank" rel="noopener">awesome-free-ai-coding</a>.
             Більшість безкоштовних планів можуть використовувати ваші промпти для навчання моделей, тому не вставляйте в них паролі, токени та особисті дані.
         </p>
     </div>
@@ -769,43 +1068,45 @@ wire_api = "responses"</pre>
     <div id="tab-grading" class="tab-content space-y-6">
         <h2 class="text-xl font-semibold text-white">Вимоги до здачі та шкала оцінювання</h2>
 
-        <div class="bg-brand-card border border-brand-border rounded-lg overflow-hidden">
-            <table class="w-full text-left text-sm text-zinc-300">
-                <thead class="bg-zinc-800/50 text-xs uppercase tracking-wider text-white border-b border-brand-border">
-                    <tr>
-                        <th class="p-4">Критерій здачі</th>
-                        <th class="p-4">Бали</th>
-                        <th class="p-4">Що перевіряє викладач на захисті</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-800">
-                    <tr>
-                        <td class="p-4 font-semibold text-white">1. Робота з MongoDB з фронтенду (Реєстр сенсорів і поріг)</td>
-                        <td class="p-4 text-green-400 font-mono">+25</td>
-                        <td class="p-4">Студент через форму на UI додає новий сенсор — він одразу з'являється з поліморфним полем <code>specs</code>. Студент змінює поріг тригера в UI — він оновлюється в MongoDB і перемикає реле.</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4 font-semibold text-white">2. Live State у Redis Hash та логіка автоматизації</td>
-                        <td class="p-4 text-green-400 font-mono">+20</td>
-                        <td class="p-4">Поточні показання сенсорів та прапорець стану виконавчого механізму (<code>actuator_status</code>) миттєво читаються і оновлюються в Redis Hash.</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4 font-semibold text-white">3. Агрегаційний Дашборд зі ScyllaDB (2 графіки)</td>
-                        <td class="p-4 text-green-400 font-mono">+30</td>
-                        <td class="p-4">У ScyllaDB згенеровано 720+ записів. На дашборді будуються Графік №1 (Min/Avg/Max по годинах) та Графік №2 (Гістограма тривог по годинах).</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4 font-semibold text-white">4. Кешування дашборду в Redis (Cache-Aside з TTL)</td>
-                        <td class="p-4 text-green-400 font-mono">+25</td>
-                        <td class="p-4">При натисканні «Скинути кеш» графіки рахуються зі ScyllaDB (<code>SCYLLADB_AGGREGATED_MISS</code>), а при повторному запиті миттєво беруться з Redis (<code>REDIS_CACHE_HIT</code> із таймером TTL).</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="card overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-zinc-300">
+                    <thead class="bg-surface-raised text-[11px] uppercase tracking-wider text-zinc-400 border-b border-line">
+                        <tr>
+                            <th class="p-4 font-semibold">Критерій здачі</th>
+                            <th class="p-4 w-20 font-semibold">Бали</th>
+                            <th class="p-4 font-semibold">Що перевіряє викладач на захисті</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-line/60">
+                        <tr>
+                            <td class="p-4 font-semibold text-white text-[13px]"><span class="inline-flex items-center gap-2"><span class="db-dot dot-mongo"></span>Робота з MongoDB з фронтенду (Реєстр сенсорів і поріг)</span></td>
+                            <td class="p-4"><span class="pts">+25</span></td>
+                            <td class="p-4 text-xs text-zinc-400 leading-relaxed">Студент через форму на UI додає новий сенсор — він одразу з'являється з поліморфним полем <code>specs</code>. Студент змінює поріг тригера в UI — він оновлюється в MongoDB і перемикає реле.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 font-semibold text-white text-[13px]"><span class="inline-flex items-center gap-2"><span class="db-dot dot-redis"></span>Live State у Redis Hash та логіка автоматизації</span></td>
+                            <td class="p-4"><span class="pts">+20</span></td>
+                            <td class="p-4 text-xs text-zinc-400 leading-relaxed">Поточні показання сенсорів та прапорець стану виконавчого механізму (<code>actuator_status</code>) миттєво читаються і оновлюються в Redis Hash.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 font-semibold text-white text-[13px]"><span class="inline-flex items-center gap-2"><span class="db-dot dot-scylla"></span>Агрегаційний Дашборд зі ScyllaDB (2 графіки)</span></td>
+                            <td class="p-4"><span class="pts">+30</span></td>
+                            <td class="p-4 text-xs text-zinc-400 leading-relaxed">У ScyllaDB згенеровано 720+ записів. На дашборді будуються Графік №1 (Min/Avg/Max по годинах) та Графік №2 (Гістограма тривог по годинах).</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 font-semibold text-white text-[13px]"><span class="inline-flex items-center gap-2"><span class="db-dot dot-redis"></span>Кешування дашборду в Redis (Cache-Aside з TTL)</span></td>
+                            <td class="p-4"><span class="pts">+25</span></td>
+                            <td class="p-4 text-xs text-zinc-400 leading-relaxed">При натисканні «Скинути кеш» графіки рахуються зі ScyllaDB (<code>SCYLLADB_AGGREGATED_MISS</code>), а при повторному запиті миттєво беруться з Redis (<code>REDIS_CACHE_HIT</code> із таймером TTL).</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="bg-brand-card border border-brand-border rounded-lg p-5">
-            <h3 class="text-sm font-semibold text-white mb-2">Контрольні питання при захисті:</h3>
-            <ol class="list-decimal pl-5 space-y-2 text-xs text-zinc-300">
+        <div class="card p-6">
+            <h3 class="text-sm font-semibold text-white mb-3">Контрольні питання при захисті:</h3>
+            <ol class="list-decimal pl-5 space-y-2.5 text-xs text-zinc-300 leading-relaxed marker:text-indigo-400/70 marker:font-mono">
                 <li>Чому реєстр сенсорів зі специфічними характеристиками (<code>specs</code>) та правила автоматизації зручно зберігати саме в документній базі MongoDB?</li>
                 <li>Як зміна порогу тривоги у колекції MongoDB впливає на прапорець <code>actuator_status</code> у Redis Hash?</li>
                 <li>Чому для побудови графіка за 12 годин ми віддаємо на фронтенд агреговані точки (Min/Avg/Max по годинах), а не всі сирі записи зі ScyllaDB?</li>
@@ -817,34 +1118,35 @@ wire_api = "responses"</pre>
     <!-- Script for Tab Switching & Copy Utilities -->
     <script>
         function switchTab(tabId) {
-            const contents = document.querySelectorAll('.tab-content');
-            contents.forEach(content => content.classList.remove('active'));
-
-            const buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(btn => {
-                btn.classList.remove('bg-brand-accent', 'text-white');
-                btn.classList.add('bg-brand-card', 'text-brand-textMuted');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('is-active');
+                btn.setAttribute('aria-selected', 'false');
             });
-
             document.getElementById('tab-' + tabId).classList.add('active');
-
             const activeBtn = document.getElementById('btn-' + tabId);
-            activeBtn.classList.remove('bg-brand-card', 'text-brand-textMuted');
-            activeBtn.classList.add('bg-brand-accent', 'text-white');
+            activeBtn.classList.add('is-active');
+            activeBtn.setAttribute('aria-selected', 'true');
         }
 
-        function copyCode() {
+        function flashCopied(btn) {
+            const original = btn.innerText;
+            btn.innerText = 'Скопійовано ✓';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.innerText = original;
+                btn.classList.remove('copied');
+            }, 1800);
+        }
+
+        function copyCode(btn) {
             const codeText = document.getElementById('compose-code').innerText;
-            navigator.clipboard.writeText(codeText).then(() => {
-                alert('Конфігурацію Docker Compose успішно скопійовано!');
-            });
+            navigator.clipboard.writeText(codeText).then(() => flashCopied(btn));
         }
 
-        function copyPrompt(id) {
+        function copyPrompt(id, btn) {
             const promptText = document.getElementById(id).innerText;
-            navigator.clipboard.writeText(promptText).then(() => {
-                alert('Текст промпту успішно скопійовано!');
-            });
+            navigator.clipboard.writeText(promptText).then(() => flashCopied(btn));
         }
     </script>
 </body>
