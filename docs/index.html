@@ -464,7 +464,7 @@
         <div class="card p-6">
             <h2 class="text-xl font-semibold text-white mb-2">Таблиця індивідуальних варіантів (25 студентів)</h2>
             <p class="text-sm text-zinc-400 mb-5 leading-relaxed">
-                Кожен студент виконує роботу відповідно до свого номера в списку групи. Три базові сенсори варіанта мають бути зареєстровані як документи в колекції <code>sensors</code> у MongoDB (плюс можливість додати 4-й кастомний сенсор через UI). Перший сенсор агрегується на Графіку №1 (Min/Avg/Max), а порушення порогу тригера (який теж зберігається і редагується в MongoDB) рахується на Графіку №2.
+                Кожен студент виконує роботу відповідно до свого номера в списку групи. Три базові сенсори варіанта мають бути зареєстровані як документи в колекції <code>sensors</code> у MongoDB (плюс можливість додати 4-й кастомний сенсор через UI). Перший сенсор агрегується на Графіку №1 (Min/Avg/Max), а порушення порогу тригера (який теж зберігається і редагується в MongoDB) рахується на Графіку №2. Відповідність колонок у ScyllaDB фіксована: <code>val1</code> — перший сенсор зі списку варіанта, <code>val2</code> — другий, <code>val3</code> — третій; цей порядок не змінюється.
             </p>
             <div class="variants-scroll border border-line">
                 <table class="w-full text-left text-xs text-zinc-300">
@@ -499,7 +499,7 @@
                             <td class="p-3 font-mono text-zinc-500">4</td>
                             <td class="p-3 font-semibold text-white">Дата-центр</td>
                             <td class="p-3">temp (°C), rack_power (kW), smoke_detector (0/1)</td>
-                            <td class="p-3">Якщо temp &gt; 24 або smoke == 1, встановити сирену на "CRITICAL", записати тривогу у Scylla.</td>
+                            <td class="p-3">Якщо temp &gt; 24, встановити сирену на "CRITICAL", записати тривогу у Scylla.</td>
                         </tr>
                         <tr>
                             <td class="p-3 font-mono text-zinc-500">5</td>
@@ -535,7 +535,7 @@
                             <td class="p-3 font-mono text-zinc-500">10</td>
                             <td class="p-3 font-semibold text-white">Серверна кімната</td>
                             <td class="p-3">temp (°C), humidity (%), water_leak (0/1)</td>
-                            <td class="p-3">Якщо temp &gt; 25 або water_leak == 1, змінити клапан на "CLOSED" та записати аварію у Scylla.</td>
+                            <td class="p-3">Якщо temp &gt; 25, змінити клапан на "CLOSED" та записати аварію у Scylla.</td>
                         </tr>
                         <tr>
                             <td class="p-3 font-mono text-zinc-500">11</td>
@@ -822,10 +822,10 @@ volumes:
                         <strong class="text-white font-medium">Колекція <code>sensors</code>:</strong> зберігає документи всіх датчиків об'єкта. Кожен документ обов'язково має вкладений об'єкт <code>specs</code> із різною структурою для різних датчиків (наприклад: у датчика температури <code>{"model": "DS18B20", "accuracy": "±0.5C", "zone": "Main"}</code>, а у датчика CO2 — <code>{"calibration_date": "2026-01-10", "max_ppm": 5000, "interface": "I2C"}</code>).
                     </li>
                     <li>
-                        <strong class="text-white font-medium">Додавання та видалення сенсора через фронтенд (<code>POST /api/sensors</code>, <code>DELETE /api/sensors/{code}</code>):</strong> на веб-сторінці має бути форма «Додати новий сенсор у MongoDB» (назва, код метрики, одиниця виміру, локація/модель). Щойно студент натискає «Додати» — документ зберігається в колекцію <code>sensors</code> і <strong class="text-white font-medium">миттєво з'являється у списку обладнання на фронтенді</strong>.
+                        <strong class="text-white font-medium">Додавання та видалення сенсора через фронтенд (<code>POST /api/mongo/sensors</code>, <code>DELETE /api/mongo/sensors/{code}</code>):</strong> на веб-сторінці має бути форма «Додати новий сенсор у MongoDB» (назва, код метрики, одиниця виміру, локація/модель). Щойно студент натискає «Додати» — документ зберігається в колекцію <code>sensors</code> і <strong class="text-white font-medium">миттєво з'являється у списку обладнання на фронтенді</strong>.
                     </li>
                     <li>
-                        <strong class="text-white font-medium">Редагування правила автоматизації з фронтенду (<code>PUT /api/rules</code>):</strong> у колекції <code>rules</code> зберігається документ активного тригера варіанта (наприклад, <code>{"metric": "temp", "operator": ">", "threshold": 26.0, "action_state": "COOLING"}</code>). Студент має змогу прямо на сайті змінити число <code>threshold</code> — воно оновлюється в MongoDB через <code>$set</code>, і бекенд одразу перераховує стан реле!
+                        <strong class="text-white font-medium">Редагування правила автоматизації з фронтенду (<code>PUT /api/mongo/rules</code>):</strong> у колекції <code>rules</code> зберігається документ активного тригера варіанта (наприклад, <code>{"object_id": "variant_01_smart_flat", "metric": "temp", "operator": ">", "threshold": 26.0, "active_state": "COOLING", "normal_state": "NORMAL"}</code>). Студент має змогу прямо на сайті змінити число <code>threshold</code> — воно оновлюється в MongoDB через <code>$set</code>, і бекенд одразу перераховує стан реле!
                     </li>
                 </ul>
             </div>
@@ -856,10 +856,18 @@ volumes:
                 <h3 class="text-base font-semibold text-white mb-2">Сирі часові ряди та два агрегаційні графіки на дашборді</h3>
                 <ul class="list-disc pl-5 space-y-2 text-xs text-zinc-300 leading-relaxed marker:text-scylla/50">
                     <li>
-                        <strong class="text-white font-medium">Таблиця часових рядів у ScyllaDB:</strong>
-                        <pre class="p-3.5 text-[11px] font-mono overflow-x-auto mt-2">CREATE KEYSPACE IF NOT EXISTS smart_monitoring WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+                        <strong class="text-white font-medium">Таблиця часових рядів у ScyllaDB:</strong> схему дозволено розширювати, але <strong class="text-white font-medium">обов'язковий мінімум — по одній колонці значення на кожен із трьох базових сенсорів варіанта</strong> (таблиця з однією-двома колонками метрик не зараховується):
+                        <pre class="p-3.5 text-[11px] font-mono overflow-x-auto mt-2">-- ScyllaDB 2026.x: SimpleStrategy не підтримує tablet replication,
+-- тому NetworkTopologyStrategy + tablets вимкнено
+CREATE KEYSPACE IF NOT EXISTS smart_monitoring
+  WITH replication = {'class': 'NetworkTopologyStrategy', 'datacenter1': 1}
+  AND tablets = {'enabled': false};
+
 CREATE TABLE IF NOT EXISTS smart_monitoring.sensor_history (
-  object_id text, ts timestamp, val1 double, val2 double, val3 double, alert_triggered int,
+  object_id text, ts timestamp,
+  val1 double, val2 double, val3 double,  -- мінімум: val1 = 1-й сенсор варіанта, val2 = 2-й, val3 = 3-й
+  alert_triggered int,
+  -- за бажанням додайте телеметрію: device_mac text, linkquality int, battery_mv int
   PRIMARY KEY (object_id, ts)
 ) WITH CLUSTERING ORDER BY (ts DESC);</pre>
                     </li>
@@ -908,8 +916,8 @@ CREATE TABLE IF NOT EXISTS smart_monitoring.sensor_history (
 У файлі `seed_data.py`:
 1. У MongoDB створює:
    - Колекцію `sensors` (за стандартом Zigbee2MQTT Exposes / Tasmota): додає 3 документи моїх базових сенсорів, де кожен документ має `code`, `ieee_address` (наприклад, `"0x00158d00045b2c91"`), `vendor` (наприклад, `"Aqara"`, `"Sonoff"`, `"Sensirion"`), `model` (наприклад, `"WSDCGQ11LM"`, `"SCD41"`), `unit` та вкладений об'єкт `specs` із різними полями (`value_min`, `value_max`, `accuracy`, `interface`, `calibration_date`, `mount_zone`).
-   - Колекцію `rules`: зберігає документ правила автоматизації `{"object_name": "...", "metric": "...", "operator": ">", "threshold": ..., "active_state": "...", "normal_state": "NORMAL"}`.
-2. У ScyllaDB створює keyspace `smart_monitoring` та таблицю `sensor_history (object_id text, ts timestamp, device_mac text, val1 double, val2 double, val3 double, linkquality int, battery_mv int, alert_triggered int, PRIMARY KEY (object_id, ts)) WITH CLUSTERING ORDER BY (ts DESC)`. Генерує 720 історичних записів за останні 12 годин (крок 1 хвилина) із реалістичними коливаннями, показниками радіоканалу `linkquality` (110..255 LQI), напругою батареї `battery_mv` (2850..3100 mV) та періодичними піками, де спрацьовує поріг (`alert_triggered = 1`).
+   - Колекцію `rules`: зберігає документ правила автоматизації `{"object_name": "...", "object_id": "...", "metric": "...", "operator": ">", "threshold": ..., "active_state": "...", "normal_state": "NORMAL"}` (`object_id` — той самий ідентифікатор об'єкта, що й у таблиці `sensor_history` у ScyllaDB).
+2. У ScyllaDB створює keyspace `smart_monitoring` (для ScyllaDB 2026.x: `NetworkTopologyStrategy` з `tablets = {'enabled': false}`, бо `SimpleStrategy` падає з помилкою tablet replication) та таблицю `sensor_history (object_id text, ts timestamp, val1 double, val2 double, val3 double, alert_triggered int, PRIMARY KEY (object_id, ts)) WITH CLUSTERING ORDER BY (ts DESC)`, де `val1`, `val2`, `val3` — відповідно перший, другий і третій сенсори мого варіанта (мінімум — 3 колонки метрик; за бажанням додай телеметрію `device_mac`, `linkquality`, `battery_mv`). Генерує 720 історичних записів за останні 12 годин (крок 1 хвилина) із реалістичними коливаннями та періодичними піками, де спрацьовує поріг (`alert_triggered = 1`); якщо додані колонки телеметрії — заповнює й їх (`linkquality` 110..255 LQI, `battery_mv` 2850..3100 mV).
 3. У Redis записує поточні значення сенсорів, а також діагностику телеметрії (`linkquality`, `battery_mv`, `rssi_dbm`, `actuator_status`) у Hash `device:state`.
 
 У файлі `main.py` (FastAPI):
